@@ -17,79 +17,73 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mein Kühlschrank'),
-        actions: [
-          StreamBuilder<bool>(
-            stream: _fridgeService.getDoorStatusStream(),
-            builder: (context, snapshot) {
-              bool isDoorOpen = snapshot.data ?? false;
-              return Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Row(
-                  children: [
-                    Icon(
-                      isDoorOpen ? Icons.sensor_door_outlined : Icons.door_front_door_outlined,
-                      color: isDoorOpen ? Colors.redAccent : Colors.white,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isDoorOpen ? 'Offen' : 'Geschlossen',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ],
+      ),
+      body: StreamBuilder<List<Shelf>>(
+        stream: _fridgeService.getShelvesStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Fehler: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Keine Regale gefunden.'));
+          }
+
+          final shelves = snapshot.data!;
+
+          return ListView.builder(
+            itemCount: shelves.length,
+            itemBuilder: (context, index) {
+              final shelf = shelves[index];
+              // Get the image path for the current shelf.
+              String? imagePath = _getImagePathForShelf(shelf.id);
+
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                elevation: 4,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  // Use Image.asset if a path is available, otherwise show a default icon.
+                  leading: imagePath != null
+                      ? Image.asset(
+                          imagePath,
+                          width: 40, // Set a fixed width for the image
+                          height: 40, // Set a fixed height for the image
+                          fit: BoxFit.contain, // Ensure the image fits well
+                        )
+                      : const Icon(
+                          Icons.inventory_2_outlined,
+                          color: Colors.teal,
+                          size: 40,
+                        ),
+                  title: Text(
+                    shelf.name, // 'Bitburger' or 'Pulleken'
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                  trailing: Text(
+                    '${shelf.weight.toStringAsFixed(2)} kg',
+                    style: const TextStyle(fontSize: 16, color: Colors.black54),
+                  ),
                 ),
               );
             },
-          ),
-        ],
-      ),
-      body: Center(
-        // The StreamBuilder now handles a nullable Shelf object.
-        child: StreamBuilder<Shelf?>(
-          stream: _fridgeService.getTomatoShelfStream(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            }
-            if (snapshot.hasError) {
-              return const Text('Fehler beim Laden der Regal-Daten.');
-            }
-            // Check if data is not null. This is the crucial part.
-            if (!snapshot.hasData || snapshot.data == null) {
-              return const Text('Tomaten-Regal nicht gefunden.');
-            }
-
-            final shelf = snapshot.data!;
-
-            return Card(
-              margin: const EdgeInsets.all(16),
-              elevation: 6,
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.food_bank_outlined,
-                      color: Colors.teal,
-                      size: 60,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      shelf.name, // 'Tomaten'
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${shelf.weight.toStringAsFixed(2)} kg',
-                      style: const TextStyle(fontSize: 20, color: Colors.black54),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+          );
+        },
       ),
     );
+  }
+
+  /// Helper function to return the correct image asset path for each shelf.
+  String? _getImagePathForShelf(String shelfId) {
+    switch (shelfId) {
+      case 'bitburger':
+        return 'assets/bitburger.jpg'; // Corrected from .png to .jpg
+      case 'pulleken':
+        return 'assets/pulleken.png';
+      default:
+        return null; // Return null if no specific image is found.
+    }
   }
 }

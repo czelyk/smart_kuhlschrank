@@ -5,30 +5,17 @@ import '../models/shelf_model.dart';
 class FridgeService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// Provides a stream of data for the 'tomato' shelf from Firestore.
+  /// Provides a stream of all shelves from the 'platforms' collection in Firestore.
   ///
-  /// This stream listens to the 'platforms/tomato' document and emits a new
-  /// Shelf object. If the document doesn't exist, it emits null.
-  Stream<Shelf?> getTomatoShelfStream() { // Returns a nullable Shelf
-    return _db.collection('platforms').doc('tomato').snapshots().map((snapshot) {
-      if (snapshot.exists) {
-        // If the document exists, create a Shelf object from it.
-        return Shelf.fromFirestore(snapshot);
-      } else {
-        // If the document does not exist, emit null to be handled by the UI.
-        return null;
-      }
-    });
-  }
-
-  /// Provides a stream of the door status from the 'fridge_status' collection.
-  Stream<bool> getDoorStatusStream() {
-    return _db.collection('fridge_status').doc('door').snapshots().map((snapshot) {
-      if (snapshot.exists && snapshot.data() != null) {
-        return snapshot.data()!['is_open'] as bool? ?? false;
-      } else {
-        return false;
-      }
+  /// This stream will automatically emit a new list of shelves whenever the data
+  /// on Firestore changes.
+  Stream<List<Shelf>> getShelvesStream() {
+    return _db.collection('platforms').snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((doc) => Shelf.fromFirestore(doc))
+          .where((shelf) => shelf != null) // Filter out any potential nulls
+          .cast<Shelf>() // Ensure the list is of type List<Shelf>
+          .toList();
     });
   }
 }
