@@ -12,6 +12,42 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FridgeService _fridgeService = FridgeService();
 
+  Future<void> _showEditNameDialog(BuildContext context, Shelf shelf) async {
+    final TextEditingController nameController =
+        TextEditingController(text: shelf.name);
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Raf Adını Düzenle'),
+          content: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(hintText: "Yeni raf adı"),
+            autofocus: true,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('İptal'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Kaydet'),
+              onPressed: () {
+                final newName = nameController.text;
+                if (newName.isNotEmpty) {
+                  _fridgeService.updateShelfName(shelf.id, newName);
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,9 +98,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     shelf.name, // 'Bitburger' or 'Pulleken'
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
-                  trailing: Text(
-                    '${shelf.weight.toStringAsFixed(2)} kg',
-                    style: const TextStyle(fontSize: 16, color: Colors.black54),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${shelf.weight.toStringAsFixed(2)} kg',
+                        style: const TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => _showEditNameDialog(context, shelf),
+                      ),
+                    ],
                   ),
                 ),
               );

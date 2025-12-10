@@ -16,22 +16,21 @@ class Shelf {
 
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-    // Helper function to create a user-friendly name from the ID.
-    String _getFriendlyName(String id) {
-      switch (id) {
-        case 'bitburger':
-          return 'Bitburger';
-        case 'pulleken':
-          return 'Pulleken';
-        default:
-          // Capitalize the ID as a fallback name.
-          return id.isNotEmpty ? id[0].toUpperCase() + id.substring(1) : 'Unnamed';
-      }
+    String defaultName;
+    switch (doc.id) {
+      case 'bitburger':
+        defaultName = '1. Platform';
+        break;
+      case 'pulleken':
+        defaultName = '2. Platform';
+        break;
+      default:
+        defaultName = 'İsimsiz Raf';
     }
 
     return Shelf(
       id: doc.id,
-      name: _getFriendlyName(doc.id), // Use the helper to get a nice name.
+      name: data['name'] ?? defaultName,
       weight: (data['weight'] ?? 0.0).toDouble(),
     );
   }

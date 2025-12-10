@@ -18,4 +18,9 @@ class FridgeService {
           .toList();
     });
   }
+
+  /// Updates the name of a shelf in Firestore.
+  Future<void> updateShelfName(String shelfId, String newName) {
+    return _db.collection('platforms').doc(shelfId).update({'name': newName});
+  }
 }
