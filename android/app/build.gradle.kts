@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.projekt"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         // Enable core library desugaring
@@ -25,8 +25,8 @@ android {
         applicationId = "com.example.projekt"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode = flutter.versionCode()
+        versionName = flutter.versionName()
     }
 
     buildTypes {

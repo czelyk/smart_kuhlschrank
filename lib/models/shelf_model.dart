@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Represents a single shelf in the smart fridge.
 class Shelf {
-  final String id;      // The document ID from Firestore (e.g., 'bitburger').
-  final String name;    // A user-friendly name for the shelf (e.g., 'Bitburger').
+  final String id;      // The document ID from Firestore (e.g., 'platform1').
+  final String name;    // A user-friendly name for the shelf (e.g., 'Platform 1').
   final double weight;  // The current weight on the shelf in kilograms.
 
   Shelf({required this.id, required this.name, required this.weight});
@@ -18,10 +18,10 @@ class Shelf {
 
     String defaultName;
     switch (doc.id) {
-      case 'bitburger':
+      case 'platform1':
         defaultName = '1. Platform';
         break;
-      case 'pulleken':
+      case 'platform2':
         defaultName = '2. Platform';
         break;
       default:
