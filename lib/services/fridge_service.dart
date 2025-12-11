@@ -1,26 +1,45 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/shelf_model.dart';
 
-/// A service that manages the data for the smart fridge.
 class FridgeService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// Provides a stream of all shelves from the 'platforms' collection in Firestore.
+  /// Provides a stream of shelves from the currently logged-in user's 'platforms' sub-collection.
   ///
-  /// This stream will automatically emit a new list of shelves whenever the data
-  /// on Firestore changes.
+  /// Returns an empty list stream if no user is logged in.
   Stream<List<Shelf>> getShelvesStream() {
-    return _db.collection('platforms').snapshots().map((snapshot) {
+    final User? user = _auth.currentUser;
+
+    if (user == null) {
+      // Return a stream of an empty list if the user is not logged in.
+      return Stream.value([]);
+    }
+
+    // Path to the sub-collection: users/{userId}/platforms
+    final collectionPath = _db.collection('users').doc(user.uid).collection('platforms');
+
+    return collectionPath.snapshots().map((snapshot) {
       return snapshot.docs
           .map((doc) => Shelf.fromFirestore(doc))
           .where((shelf) => shelf != null) // Filter out any potential nulls
-          .cast<Shelf>() // Ensure the list is of type List<Shelf>
+          .cast<Shelf>()
           .toList();
     });
   }
 
-  /// Updates the name of a shelf in Firestore.
-  Future<void> updateShelfName(String shelfId, String newName) {
-    return _db.collection('platforms').doc(shelfId).update({'name': newName});
+  /// Updates the name of a shelf for the currently logged-in user.
+  Future<void> updateShelfName(String shelfId, String newName) async {
+    final User? user = _auth.currentUser;
+    if (user == null) {
+      // Or throw an error, depending on desired behavior.
+      return;
+    }
+    
+    // Path to the document in the sub-collection: users/{userId}/platforms/{shelfId}
+    final docPath = _db.collection('users').doc(user.uid).collection('platforms').doc(shelfId);
+
+    await docPath.update({'name': newName});
   }
 }

@@ -1,24 +1,48 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:projekt/providers/locale_provider.dart';
+import 'package:projekt/services/geolocation_service.dart'; // Import the new service
 import 'package:projekt/screens/login_screen.dart';
 import 'package:projekt/main.dart';
 
-/// A widget that handles the routing based on the authentication state.
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _isInitialDataLoaded = false;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // If the user is not logged in, show the login screen.
-        if (!snapshot.hasData) {
-          return const LoginScreen();
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
         }
 
-        // If the user is logged in, show the main app screen.
-        return const MainAppScreen();
+        if (snapshot.hasData) {
+          // If user is logged in, load initial data (locale, country, etc.)
+          if (!_isInitialDataLoaded) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              // Load language preference from Firebase
+              Provider.of<LocaleProvider>(context, listen: false).loadLocale();
+              
+              // Update user's country based on IP in the background
+              GeolocationService().updateUserCountry();
+            });
+            _isInitialDataLoaded = true;
+          }
+          return const MainAppScreen();
+        } else {
+          // If user is logged out, reset the flag
+          _isInitialDataLoaded = false;
+          return const LoginScreen();
+        }
       },
     );
   }
