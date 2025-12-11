@@ -15,6 +15,8 @@ dependencies:
   flutter_local_notifications: ^17.1.2
   firebase_core: ^3.2.0
   cloud_firestore: ^5.1.0
+  firebase_auth: ^5.1.2 # Added for authentication
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

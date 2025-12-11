@@ -19,13 +19,13 @@ class Shelf {
     String defaultName;
     switch (doc.id) {
       case 'platform1':
-        defaultName = '1. Platform';
+        defaultName = 'Regal 1'; // Shelf 1
         break;
       case 'platform2':
-        defaultName = '2. Platform';
+        defaultName = 'Regal 2'; // Shelf 2
         break;
       default:
-        defaultName = 'İsimsiz Raf';
+        defaultName = 'Unbenanntes Regal'; // Unnamed Shelf
     }
 
     return Shelf(

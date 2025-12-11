@@ -12,6 +12,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FridgeService _fridgeService = FridgeService();
 
+  // Shows a dialog to edit the shelf name.
   Future<void> _showEditNameDialog(BuildContext context, Shelf shelf) async {
     final TextEditingController nameController =
         TextEditingController(text: shelf.name);
@@ -19,21 +20,21 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Raf Adını Düzenle'),
+          title: const Text('Regalnamen bearbeiten'), // Edit Shelf Name
           content: TextField(
             controller: nameController,
-            decoration: const InputDecoration(hintText: "Yeni raf adı"),
+            decoration: const InputDecoration(hintText: "Neuer Regalname"), // New shelf name
             autofocus: true,
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('İptal'),
+              child: const Text('Abbrechen'), // Cancel
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Kaydet'),
+              child: const Text('Speichern'), // Save
               onPressed: () {
                 final newName = nameController.text;
                 if (newName.isNotEmpty) {
@@ -52,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mein Kühlschrank'),
+        title: const Text('Mein Kühlschrank'), // My Fridge
       ),
       body: StreamBuilder<List<Shelf>>(
         stream: _fridgeService.getShelvesStream(),
@@ -61,10 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Fehler: ${snapshot.error}'));
+            return Center(child: Text('Fehler: ${snapshot.error}')); // Error
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Keine Regale gefunden.'));
+            return const Center(child: Text('Keine Regale gefunden.')); // No shelves found.
           }
 
           final shelves = snapshot.data!;
