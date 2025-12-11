@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/shelf_model.dart';
 import '../services/fridge_service.dart';
 
@@ -12,29 +13,29 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FridgeService _fridgeService = FridgeService();
 
-  // Shows a dialog to edit the shelf name.
   Future<void> _showEditNameDialog(BuildContext context, Shelf shelf) async {
+    final l10n = AppLocalizations.of(context)!;
     final TextEditingController nameController =
         TextEditingController(text: shelf.name);
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Regalnamen bearbeiten'), // Edit Shelf Name
+          title: Text(l10n.editShelfName),
           content: TextField(
             controller: nameController,
-            decoration: const InputDecoration(hintText: "Neuer Regalname"), // New shelf name
+            decoration: InputDecoration(hintText: l10n.newShelfName),
             autofocus: true,
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Abbrechen'), // Cancel
+              child: Text(l10n.cancel),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Speichern'), // Save
+              child: Text(l10n.save),
               onPressed: () {
                 final newName = nameController.text;
                 if (newName.isNotEmpty) {
@@ -51,9 +52,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mein Kühlschrank'), // My Fridge
+        title: Text(l10n.myFridge),
       ),
       body: StreamBuilder<List<Shelf>>(
         stream: _fridgeService.getShelvesStream(),
@@ -62,10 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Fehler: ${snapshot.error}')); // Error
+            return Center(child: Text('${l10n.error}: ${snapshot.error}'));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Keine Regale gefunden.')); // No shelves found.
+            return Center(child: Text(l10n.noShelvesFound));
           }
 
           final shelves = snapshot.data!;

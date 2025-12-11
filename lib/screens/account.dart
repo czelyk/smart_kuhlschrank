@@ -1,21 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:projekt/providers/locale_provider.dart';
 import 'package:projekt/services/auth_service.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({Key? key}) : super(key: key);
 
+  // Function to show the language selection dialog
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          title: Text(AppLocalizations.of(context)!.language),
+          children: <Widget>[
+            SimpleDialogOption(
+              onPressed: () {
+                Provider.of<LocaleProvider>(context, listen: false)
+                    .setLocale(const Locale('de'));
+                Navigator.pop(context);
+              },
+              child: const Text('Deutsch'),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Provider.of<LocaleProvider>(context, listen: false)
+                    .setLocale(const Locale('en'));
+                Navigator.pop(context);
+              },
+              child: const Text('English'),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Provider.of<LocaleProvider>(context, listen: false)
+                    .setLocale(const Locale('tr'));
+                Navigator.pop(context);
+              },
+              child: const Text('Türkçe'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final AuthService _authService = AuthService();
-    final User? user = _authService.currentUser;
+    final l10n = AppLocalizations.of(context)!;
+    final AuthService authService = AuthService();
+    final User? user = authService.currentUser;
 
-    // Display a placeholder if the user is somehow null
-    final String userEmail = user?.email ?? 'Kein Benutzer angemeldet'; // No user logged in
-    final String initial = user?.email?.isNotEmpty == true ? user!.email![0].toUpperCase() : '?';
+    final String userEmail = user?.email ?? l10n.error; // Use localized string for error
+    final String initial =
+        user?.email?.isNotEmpty == true ? user!.email![0].toUpperCase() : '?';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Konto')), // Account
+      appBar: AppBar(title: Text(l10n.account)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -26,32 +68,26 @@ class AccountScreen extends StatelessWidget {
               child: Text(initial, style: const TextStyle(fontSize: 40)),
             ),
             const SizedBox(height: 16),
-            // We don't have a user display name yet, so we show the email.
             Text('Email: $userEmail', style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 24),
-            const Text(
-              'Einstellungen', // Settings
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)
+            Text(
+              l10n.settings, // Localized settings title
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             ListTile(
               leading: const Icon(Icons.language),
-              title: const Text('Sprache'), // Language
-              onTap: () {
-                // In a future step, we could implement language change logic here.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Diese Funktion ist noch nicht verfügbar.')), // This feature is not yet available.
-                );
-              },
+              title: Text(l10n.language), // Localized language title
+              onTap: () => _showLanguageDialog(context), // Call the dialog function
             ),
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text(
-                'Abmelden', // Log out
-                style: TextStyle(color: Colors.red),
+              title: Text(
+                l10n.logOut,
+                style: const TextStyle(color: Colors.red),
               ),
               onTap: () async {
-                // The AuthGate will handle navigation after sign-out.
-                await _authService.signOut();
+                await authService.signOut();
               },
             ),
           ],

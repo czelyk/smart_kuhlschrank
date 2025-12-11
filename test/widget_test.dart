@@ -12,9 +12,11 @@ import 'package:projekt/main.dart';
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(SmartFridgeApp());
+    // Corrected the widget name from SmartFridgeApp to MyApp
+    await tester.pumpWidget(const MyApp());
 
     // Verify that the home screen is shown by checking for one of the bottom navigation bar labels.
+    // Note: This test will only pass if the default device language is German.
     expect(find.text('Startseite'), findsOneWidget);
   });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/shopping_list_item.dart';
 import '../services/shopping_list_service.dart';
 
@@ -13,17 +14,17 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   final ShoppingListService _shoppingListService = ShoppingListService();
   final TextEditingController _itemController = TextEditingController();
 
-  // Yeni ürün eklemek için bir diyalog penceresi gösterir.
   void _showAddItemDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Neues Produkt hinzufügen'), // Add New Item
+          title: Text(l10n.addNewItem),
           content: TextField(
             controller: _itemController,
             autofocus: true,
-            decoration: const InputDecoration(hintText: 'Produktname'), // Item Name
+            decoration: InputDecoration(hintText: l10n.itemName),
           ),
           actions: [
             TextButton(
@@ -31,7 +32,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                 Navigator.of(context).pop();
                 _itemController.clear();
               },
-              child: const Text('Abbrechen'), // Cancel
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () {
@@ -41,7 +42,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   _itemController.clear();
                 }
               },
-              child: const Text('Hinzufügen'), // Add
+              child: Text(l10n.add),
             ),
           ],
         );
@@ -51,9 +52,11 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Einkaufsliste'), // Shopping List
+        title: Text(l10n.shoppingList),
       ),
       body: StreamBuilder<List<ShoppingListItem>>(
         stream: _shoppingListService.getShoppingListStream(),
@@ -62,13 +65,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Fehler: ${snapshot.error}')); // Error
+            return Center(child: Text('${l10n.error}: ${snapshot.error}'));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
-                'Ihre Einkaufsliste ist leer.', // Your shopping list is empty.
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+                l10n.yourShoppingListIsEmpty,
+                style: const TextStyle(fontSize: 18, color: Colors.grey),
               ),
             );
           }
@@ -108,7 +111,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddItemDialog,
-        tooltip: 'Produkt hinzufügen',
+        tooltip: l10n.addItem,
         child: const Icon(Icons.add),
       ),
     );

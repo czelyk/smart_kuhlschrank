@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
 
   // Sample notification data. In a real app, this would come from a service.
-  final List<String> notifications = const [
-    // 'Milch: Mindesthaltbarkeitsdatum läuft bald ab',
-    // 'Äpfel: 2 Stück übrig',
-    // 'Eier: Aufgebraucht',
-  ];
+  final List<String> notifications = const [];
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Benachrichtigungen'), // Notifications
+        title: Text(l10n.notifications), // Localized title
       ),
       body: notifications.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                'Keine neuen Benachrichtigungen.', // No new notifications.
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+                l10n.noNewNotifications, // Localized empty state message
+                style: const TextStyle(fontSize: 18, color: Colors.grey),
               ),
             )
           : ListView.builder(
