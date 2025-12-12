@@ -22,5 +22,13 @@
   "settings": "Einstellungen",
   "language": "Sprache",
   "featureNotAvailable": "Diese Funktion ist noch nicht verfügbar.",
-  "noNewNotifications": "Keine neuen Benachrichtigungen."
+  "noNewNotifications": "Keine neuen Benachrichtigungen.",
+  "login": "Anmelden",
+  "register": "Registrieren",
+  "email": "E-Mail",
+  "password": "Passwort",
+  "dontHaveAccount": "Sie haben noch kein Konto?",
+  "alreadyHaveAccount": "Sie haben bereits ein Konto?",
+  "pleaseEnterEmail": "Bitte geben Sie Ihre E-Mail-Adresse ein",
+  "pleaseEnterPassword": "Bitte geben Sie Ihr Passwort ein"
 }

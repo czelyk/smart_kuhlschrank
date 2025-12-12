@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projekt/services/auth_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import the l10n library
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -47,6 +48,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get the localization object
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -58,30 +62,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    _isLogin ? 'Anmelden' : 'Registrieren', // Login or Register
+                    _isLogin ? l10n.login : l10n.register, // Use localized strings
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 24),
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.email, // Use localized string
+                      border: const OutlineInputBorder(),
                     ),
                     validator: (value) =>
-                        (value?.isEmpty ?? true) ? 'Bitte Email eingeben' : null, // Please enter an email
+                        (value?.isEmpty ?? true) ? l10n.pleaseEnterEmail : null, // Use localized validation
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(
-                      labelText: 'Passwort',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.password, // Use localized string
+                      border: const OutlineInputBorder(),
                     ),
                     obscureText: true,
                     validator: (value) =>
-                        (value?.isEmpty ?? true) ? 'Bitte Passwort eingeben' : null, // Please enter a password
+                        (value?.isEmpty ?? true) ? l10n.pleaseEnterPassword : null, // Use localized validation
                   ),
                   if (_errorMessage.isNotEmpty)
                     Padding(
@@ -98,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
                     ),
-                    child: Text(_isLogin ? 'Anmelden' : 'Registrieren'),
+                    child: Text(_isLogin ? l10n.login : l10n.register), // Use localized strings
                   ),
                   TextButton(
                     onPressed: () {
@@ -109,8 +113,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     child: Text(
                       _isLogin
-                          ? 'Neues Konto erstellen' // Create a new account
-                          : 'Ich habe bereits ein Konto', // I already have an account
+                          ? '${l10n.dontHaveAccount} ${l10n.register}'
+                          : '${l10n.alreadyHaveAccount} ${l10n.login}',
                     ),
                   ),
                 ],

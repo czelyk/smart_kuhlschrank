@@ -22,5 +22,13 @@
   "settings": "Settings",
   "language": "Language",
   "featureNotAvailable": "This feature is not yet available.",
-  "noNewNotifications": "No new notifications."
+  "noNewNotifications": "No new notifications.",
+  "login": "Login",
+  "register": "Register",
+  "email": "Email",
+  "password": "Password",
+  "dontHaveAccount": "Don''t have an account?",
+  "alreadyHaveAccount": "Already have an account?",
+  "pleaseEnterEmail": "Please enter your email",
+  "pleaseEnterPassword": "Please enter your password"
 }

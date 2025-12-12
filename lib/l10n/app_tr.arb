@@ -18,9 +18,17 @@
   "error": "Hata",
   "yourShoppingListIsEmpty": "Alışveriş listeniz boş.",
   "noShelvesFound": "Raf bulunamadı.",
-  "logOut": "Çıkış Yap",
+  "logOut": "Oturumu Kapat",
   "settings": "Ayarlar",
   "language": "Dil",
   "featureNotAvailable": "Bu özellik henüz mevcut değil.",
-  "noNewNotifications": "Yeni bildirim yok."
+  "noNewNotifications": "Yeni bildirim yok.",
+  "login": "Giriş Yap",
+  "register": "Kayıt Ol",
+  "email": "E-posta",
+  "password": "Şifre",
+  "dontHaveAccount": "Hesabınız yok mu?",
+  "alreadyHaveAccount": "Zaten bir hesabınız var mı?",
+  "pleaseEnterEmail": "Lütfen e-posta adresinizi girin",
+  "pleaseEnterPassword": "Lütfen şifrenizi girin"
 }
