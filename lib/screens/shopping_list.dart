@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:projekt/services/auth_service.dart';
+import 'package:smart_kuhlschrank/services/auth_service.dart';
 
 // Represents a single item in the shopping list.
 class ShoppingListItem {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:projekt/providers/locale_provider.dart';
-import 'package:projekt/services/auth_service.dart';
+import 'package:smart_kuhlschrank/providers/locale_provider.dart';
+import 'package:smart_kuhlschrank/services/auth_service.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({Key? key}) : super(key: key);

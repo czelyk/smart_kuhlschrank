@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:projekt/services/auth_service.dart';
+import 'package:smart_kuhlschrank/services/auth_service.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Import the l10n library
 
 class LoginScreen extends StatefulWidget {

@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:projekt/providers/locale_provider.dart';
-import 'package:projekt/services/geolocation_service.dart'; // Import the new service
-import 'package:projekt/screens/login_screen.dart';
-import 'package:projekt/main.dart';
+import 'package:smart_kuhlschrank/providers/locale_provider.dart';
+import 'package:smart_kuhlschrank/services/geolocation_service.dart'; // Import the new service
+import 'package:smart_kuhlschrank/screens/login_screen.dart';
+import 'package:smart_kuhlschrank/main.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});

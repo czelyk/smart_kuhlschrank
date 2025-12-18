@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:projekt/services/auth_service.dart';
+import 'package:smart_kuhlschrank/services/auth_service.dart';
 
 class LocaleProvider with ChangeNotifier {
   final AuthService _authService = AuthService();

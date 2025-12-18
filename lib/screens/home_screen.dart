@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:projekt/models/fridge_status_model.dart';
+import 'package:smart_kuhlschrank/models/fridge_status_model.dart';
 import '../models/shelf_model.dart';
 import '../services/fridge_service.dart';
 

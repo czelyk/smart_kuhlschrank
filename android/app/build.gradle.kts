@@ -1,12 +1,15 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+
+    // START: FlutterFire Configuration
+    id("com.google.gms.google-services") // Google Services Plugin app-level
+    // END: FlutterFire Configuration
 }
 
 android {
-    namespace = "com.example.projekt"
+    namespace = "com.example.smart_kuhlschrank"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -22,11 +25,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.projekt"
-        minSdk = 23 // Updated from flutter.minSdkVersion to 23
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode()
-        versionName = flutter.versionName()
+        applicationId = "com.example.smart_kuhlschrank"
+        minSdkVersion(23)
+        targetSdkVersion(33)
+        versionCode = 1
+        versionName = "1.0"
     }
 
     buildTypes {
@@ -40,7 +43,12 @@ flutter {
     source = "../.."
 }
 
-// Add the dependency for core library desugaring
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    // Firebase BoM ve gerekli kütüphaneler
+    implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
 }
