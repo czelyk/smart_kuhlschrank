@@ -30,5 +30,16 @@
   "dontHaveAccount": "Sie haben noch kein Konto?",
   "alreadyHaveAccount": "Sie haben bereits ein Konto?",
   "pleaseEnterEmail": "Bitte geben Sie Ihre E-Mail-Adresse ein",
-  "pleaseEnterPassword": "Bitte geben Sie Ihr Passwort ein"
+  "pleaseEnterPassword": "Bitte geben Sie Ihr Passwort ein",
+  "recipes": "Rezepte",
+  "noRecipesFound": "Keine Rezepte gefunden.",
+  "ingredients": "Zutaten",
+  "instructions": "Zubereitung",
+  "addRecipe": "Rezept hinzufügen",
+  "recipeName": "Rezeptname",
+  "pleaseEnterRecipeName": "Bitte geben Sie den Rezeptnamen ein",
+  "ingredientName": "Zutat",
+  "quantity": "Menge",
+  "pleaseAddIngredients": "Bitte fügen Sie mindestens eine Zutat hinzu",
+  "pleaseEnterInstructions": "Bitte geben Sie die Zubereitungsschritte ein"
 }

@@ -16,6 +16,7 @@ import 'screens/home_screen.dart';
 import 'screens/shopping_list_screen.dart'; 
 import 'screens/notifications.dart';
 import 'screens/account.dart';
+import 'screens/recipes_screen.dart';
 
 Future<void> main() async { 
   WidgetsFlutterBinding.ensureInitialized(); 
@@ -79,6 +80,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
   static const List<Widget> _screens = [
     HomeScreen(),
     ShoppingListScreen(),
+    RecipesScreen(),
     NotificationsScreen(),
     AccountScreen(),
   ];
@@ -96,6 +98,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
     return Scaffold(
         body: _screens[_selectedIndex],
         bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
           selectedItemColor: Colors.teal,
@@ -108,6 +111,10 @@ class _MainAppScreenState extends State<MainAppScreen> {
             BottomNavigationBarItem(
               icon: const Icon(Icons.shopping_cart),
               label: l10n.shopping,
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.restaurant_menu),
+              label: l10n.recipes,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.notifications),

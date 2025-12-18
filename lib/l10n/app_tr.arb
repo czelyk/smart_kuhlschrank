@@ -30,5 +30,16 @@
   "dontHaveAccount": "Hesabınız yok mu?",
   "alreadyHaveAccount": "Zaten bir hesabınız var mı?",
   "pleaseEnterEmail": "Lütfen e-posta adresinizi girin",
-  "pleaseEnterPassword": "Lütfen şifrenizi girin"
+  "pleaseEnterPassword": "Lütfen şifrenizi girin",
+  "recipes": "Tarifler",
+  "noRecipesFound": "Tarif bulunamadı.",
+  "ingredients": "Malzemeler",
+  "instructions": "Hazırlanışı",
+  "addRecipe": "Tarif Ekle",
+  "recipeName": "Tarif Adı",
+  "pleaseEnterRecipeName": "Lütfen tarif adını girin",
+  "ingredientName": "Malzeme Adı",
+  "quantity": "Miktar",
+  "pleaseAddIngredients": "Lütfen en az bir malzeme ekleyin",
+  "pleaseEnterInstructions": "Lütfen hazırlanışını girin"
 }

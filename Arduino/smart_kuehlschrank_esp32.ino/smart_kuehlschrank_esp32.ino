@@ -1,189 +1,132 @@
-/*
-  Smart Kühlschrank - ESP32 Hauptcode
-  Version: 2 Regale (Platform 1 & 2), Stündliches Update (Deep Sleep)
-*/
-
-// --- Benötigte Bibliotheken ---
 #include <WiFi.h>
-#include <Firebase_ESP_Client.h> // Firebase Bibliothek
-#include "HX711_ADC.h"       // Gewichtssensor-Bibliothek
+#include <Firebase_ESP_Client.h>
+#include "HX711_ADC.h"
+#include <time.h>
 
-// --- SCHRITT 1: AUSFÜLLEN (WLAN-Zugangsdaten) ---
-#define WIFI_SSID "Izvini?"
-#define WIFI_PASSWORD "ahmethasan"
+// ===== WIFI AYARLARI =====
+#define WIFI_SSID     "Deneme"
+#define WIFI_PASSWORD "12345678"
 
-// --- SCHRITT 2: API SCHLÜSSEL & PROJEKT ID ---
+// ===== FIREBASE AYARLARI =====
 #define API_KEY "AIzaSyAMHeRwya8gQiK7-5u1557chofAv-gZTWk"
 #define FIREBASE_PROJECT_ID "smart-kuehlschrank81"
+#define USER_ID "8SycQCKRI2fwzrXYK9xJQm1Zx42" // Güncellendi: Üstteki doğru kullanıcı ID'si
 
-// --- SCHRITT 3: PIN-Zuweisung (Anpassen) ---
-const int PLATFORM1_HX711_DOUT_PIN = 6; 
-const int PLATFORM1_HX711_SCK_PIN  = 7; 
+// ===== HX711 PİNLERİ =====
+#define SCK_PIN 6
+#define P1_DOUT 4
+#define P2_DOUT 5
 
-const int PLATFORM2_HX711_DOUT_PIN = 4; 
-const int PLATFORM2_HX711_SCK_PIN  = 5; 
+// ===== AYARLAR =====
+#define STABILIZING_TIME 2000
+#define SEND_INTERVAL_MS 10000UL // Test için 10 saniye yaptım
+float CAL1 = 1.0; // Ham veriyi görmek için 1.0 yaptık
+float CAL2 = 1.0;
 
-// --- SCHRITT 4: AUSFÜLLEN (Kalibrierung) ---
-float PLATFORM1_CALIBRATION_FACTOR = 420.0;
-float PLATFORM2_CALIBRATION_FACTOR = 420.0;
+// ===== NESNELER =====
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
 
-// --- Weitere Einstellungen ---
-const int STABILIZING_TIME = 2000; 
-#define DEEP_SLEEP_SECONDS 3600
+HX711_ADC scale1(P1_DOUT, SCK_PIN);
+HX711_ADC scale2(P2_DOUT, SCK_PIN);
 
-// --- Globale Firebase-Objekte ---
-FirebaseData fbdo_platform1;   
-FirebaseData fbdo_platform2;   
-FirebaseAuth auth;    
-FirebaseConfig config; 
+// ===== PROTOTİPLER =====
+void sendData(String id, float weight);
+String getTimestamp();
 
-// --- Sensor-Objekte ---
-HX711_ADC scale_platform1(PLATFORM1_HX711_DOUT_PIN, PLATFORM1_HX711_SCK_PIN);
-HX711_ADC scale_platform2(PLATFORM2_HX711_DOUT_PIN, PLATFORM2_HX711_SCK_PIN);
+unsigned long lastSendTime = 0;
 
-// --- Funktionsdeklarationen ---
-void sendDataToFirebase(String platformId, float weight); 
-String getFirebaseTimestamp();
-void tokenStatusCallback(TokenInfo info); 
-
-// ====================================================
-// SETUP
-// ====================================================
 void setup() {
-  Serial.begin(115200);
-  Serial.println("\nESP32 aufgewacht! (Platform 1&2 Version)");
+    Serial.begin(115200);
+    delay(2000);
+    Serial.println("\n\n=== AKILLI BUZDOLABI BASLIYOR ===");
 
-  // --- WLAN-Verbindung ---
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Verbinde mit WLAN");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(300);
-  }
-  Serial.println();
-  Serial.print("Verbunden! IP-Adresse: ");
-  Serial.println(WiFi.localIP());
+    // 1. WIFI BAĞLANTISI
+    WiFi.mode(WIFI_STA);
+    WiFi.setSleep(false);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  // --- Firebase-Verbindung ---
-  Serial.println("Verbinde mit Firebase...");
-  config.api_key = API_KEY;
-  auth.user.email = "esp32@auther.com"; 
-  auth.user.password = "esp32pass";      
-  config.token_status_callback = tokenStatusCallback; 
-  Firebase.begin(&config, &auth);
-  Firebase.reconnectWiFi(true);
-  
-  // --- ZEIT-SYNCHRONISIERUNG ---
-  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
-  Serial.println("Warte auf NTP-Zeitsynchronisierung...");
-  struct tm timeinfo;
-  while (!getLocalTime(&timeinfo)) {
-    Serial.print(".");
-    delay(1000);
-  }
-  Serial.println("\nZeitsynchronisierung erfolgreich!");
+    Serial.print("WiFi Baglantisi deneniyor");
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("\n[BASARILI] WiFi Baglandi!");
 
-  // --- Sensor-Initialisierung ---
-  // Platform 1
-  Serial.println("Platform 1-Sensor wird initialisiert...");
-  scale_platform1.begin();
-  scale_platform1.start(STABILIZING_TIME, true); 
-  if (scale_platform1.getTareTimeoutFlag()) {
-    Serial.println("Platform 1-Sensor Tara-Timeout! (0.00 wird gesendet)");
-  } else {
-    Serial.println("Platform 1-Sensor tariert.");
-    scale_platform1.setCalFactor(PLATFORM1_CALIBRATION_FACTOR); 
-  }
+    // 2. ZAMAN AYARI
+    configTime(0, 0, "pool.ntp.org");
 
-  // Platform 2
-  Serial.println("Platform 2-Sensor wird initialisiert...");
-  scale_platform2.begin();
-  scale_platform2.start(STABILIZING_TIME, true); 
-  if (scale_platform2.getTareTimeoutFlag()) {
-    Serial.println("Platform 2-Sensor Tara-Timeout! (0.00 wird gesendet)");
-  } else {
-    Serial.println("Platform 2-Sensor tariert.");
-    scale_platform2.setCalFactor(PLATFORM2_CALIBRATION_FACTOR); 
-  }
+    // 3. FIREBASE YAPILANDIRMASI
+    config.api_key = API_KEY;
+    auth.user.email = "esp32@auther.com";
+    auth.user.password = "esp32pass";
+    config.timeout.serverResponse = 15000;
 
-  // --- Hauptoperation ---
-  if (Firebase.ready()) {
-    float weight_platform1 = scale_platform1.getData();
-    Serial.print("Platform 1-Gewicht: ");
-    Serial.print(weight_platform1, 2);
-    Serial.println(" kg");
-    sendDataToFirebase("platform1", weight_platform1);
+    Firebase.begin(&config, &auth);
+    Firebase.reconnectWiFi(true);
 
-    float weight_platform2 = scale_platform2.getData();
-    Serial.print("Platform 2-Gewicht: ");
-    Serial.print(weight_platform2, 2);
-    Serial.println(" kg");
-    sendDataToFirebase("platform2", weight_platform2);
-    
-  } else {
-    Serial.println("Fehler: Firebase nicht bereit. Senden übersprungen.");
-  }
+    // 4. SENSÖRLERİ BAŞLAT (OTOMATİK SIFIRLAMA AKTİF)
+    Serial.println("\n--- Sensorler Sifirlaniyor (Tare) ---");
+    Serial.println("Lutfen platformlarin uzerine dokunmayin...");
 
-  // --- Schlafmodus ---
-  Serial.println("Vorgang abgeschlossen. Gehe für 1 Stunde in den Tiefschlaf...");
-  ESP.deepSleep(DEEP_SLEEP_SECONDS * 1000000);
+    scale1.begin();
+    scale1.start(STABILIZING_TIME, true); // TRUE: Açılışta 0 kabul et
+    scale1.setCalFactor(CAL1);
+
+    scale2.begin();
+    scale2.start(STABILIZING_TIME, true); // TRUE: Açılışta 0 kabul et
+    scale2.setCalFactor(CAL2);
+
+    // Bağlantı Kontrolü
+    if (scale1.getTareStatus() == true) {
+        Serial.println("[OK] Platform 1 Sifirlandi ve Hazir.");
+    } else {
+        Serial.println("[UYARI] Platform 1 Sifirlanamadi! Kablolari kontrol et.");
+    }
+
+    Serial.println("Sistem Hazir.\n");
+    lastSendTime = millis();
 }
 
-// ====================================================
-// LOOP (Wird wegen Deep Sleep NIEMALS ausgeführt)
-// ====================================================
-void loop() {}
+void loop() {
+    scale1.update();
+    scale2.update();
 
-// ====================================================
-// Daten-Sende-Funktion
-// ====================================================
-void sendDataToFirebase(String platformId, float weight) {
-  Serial.println("---------------------------------");
-  Serial.print("Sende Daten für: ");
-  Serial.println(platformId);
+    if (millis() - lastSendTime >= SEND_INTERVAL_MS) {
+        if (WiFi.status() == WL_CONNECTED && Firebase.ready()) {
+            float w1 = scale1.getData();
+            float w2 = scale2.getData();
 
-  String content = R"({"fields":{"current_weight_kg":{"doubleValue":)";
-  content += String(weight, 2);
-  content += R"(},"last_updated":{"timestampValue":")";
-  content += getFirebaseTimestamp();
-  content += R"("}}})";
+            Serial.print("P1: "); Serial.print(w1);
+            Serial.print(" | P2: "); Serial.println(w2);
 
-  String document_path = "platforms/" + platformId;
-  FirebaseData* fbdo_ptr = (platformId == "platform2") ? &fbdo_platform2 : &fbdo_platform1;
-
-  if (Firebase.Firestore.patchDocument(fbdo_ptr, FIREBASE_PROJECT_ID, "", document_path.c_str(), content.c_str(), "current_weight_kg,last_updated")) {
-    Serial.print("ERFOLG: '");
-    Serial.print(document_path);
-    Serial.println("' Dokument aktualisiert.");
-  } else {
-    Serial.print("FEHLER: Konnte '");
-    Serial.print(document_path);
-    Serial.println("' Dokument NICHT aktualisieren!");
-    Serial.println(fbdo_ptr->errorReason());
-  }
-  Serial.println("---------------------------------");
+            sendData("platform1", w1);
+            sendData("platform2", w2);
+        }
+        lastSendTime = millis();
+    }
 }
 
-// ====================================================
-// Hilfsfunktionen
-// ====================================================
-String getFirebaseTimestamp() {
-  time_t now;
-  struct tm timeinfo;
-  if (!getLocalTime(&timeinfo)) {
-    Serial.println("Zeit konnte nicht abgerufen werden!");
-    return "";
-  }
-  char buf[sizeof "2011-10-08T07:07:09Z"];
-  strftime(buf, sizeof buf, "%Y-%m-%dT%H:%M:%SZ", &timeinfo);
-  return String(buf);
+void sendData(String id, float weight) {
+    String json = "{\"fields\":{";
+    json += "\"current_weight_kg\":{\"doubleValue\":" + String(weight, 2) + "},";
+    json += "\"last_updated\":{\"timestampValue\":\"" + getTimestamp() + "\"}";
+    json += "}}";
+
+    String path = "users/" + String(USER_ID) + "/platforms/" + id;
+
+    if (Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", path.c_str(), json.c_str(), "current_weight_kg,last_updated")) {
+        Serial.println("Firebase Guncellendi: " + id);
+    } else {
+        Serial.println("Firebase Hatasi: " + fbdo.errorReason());
+    }
 }
 
-void tokenStatusCallback(TokenInfo info) {
-  if (info.status == token_status_ready) {
-    Serial.println("Firebase Token erhalten.");
-  } else {
-    Serial.print("Firebase Token Fehler: ");
-    Serial.println(info.error.message.c_str());
-  }
+String getTimestamp() {
+    struct tm t;
+    if (!getLocalTime(&t)) return "2025-01-01T00:00:00Z";
+    char buf[25];
+    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", &t);
+    return String(buf);
 }

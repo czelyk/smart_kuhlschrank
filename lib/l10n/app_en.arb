@@ -30,5 +30,16 @@
   "dontHaveAccount": "Don''t have an account?",
   "alreadyHaveAccount": "Already have an account?",
   "pleaseEnterEmail": "Please enter your email",
-  "pleaseEnterPassword": "Please enter your password"
+  "pleaseEnterPassword": "Please enter your password",
+  "recipes": "Recipes",
+  "noRecipesFound": "No recipes found.",
+  "ingredients": "Ingredients",
+  "instructions": "Instructions",
+  "addRecipe": "Add Recipe",
+  "recipeName": "Recipe Name",
+  "pleaseEnterRecipeName": "Please enter recipe name",
+  "ingredientName": "Ingredient Name",
+  "quantity": "Quantity",
+  "pleaseAddIngredients": "Please add at least one ingredient",
+  "pleaseEnterInstructions": "Please enter instructions"
 }
