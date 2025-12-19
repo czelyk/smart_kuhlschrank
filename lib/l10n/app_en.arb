@@ -41,5 +41,7 @@
   "ingredientName": "Ingredient Name",
   "quantity": "Quantity",
   "pleaseAddIngredients": "Please add at least one ingredient",
-  "pleaseEnterInstructions": "Please enter instructions"
+  "pleaseEnterInstructions": "Please enter instructions",
+  "recipesAddedSuccessfully": "Recipes added successfully",
+  "fetchRandomRecipes": "Fetch Random Recipes"
 }

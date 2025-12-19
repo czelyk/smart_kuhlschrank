@@ -41,5 +41,7 @@
   "ingredientName": "Malzeme Adı",
   "quantity": "Miktar",
   "pleaseAddIngredients": "Lütfen en az bir malzeme ekleyin",
-  "pleaseEnterInstructions": "Lütfen hazırlanışını girin"
+  "pleaseEnterInstructions": "Lütfen hazırlanışını girin",
+  "recipesAddedSuccessfully": "Tarifler başarıyla eklendi",
+  "fetchRandomRecipes": "Rastgele Tarif Getir"
 }

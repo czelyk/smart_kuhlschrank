@@ -10,7 +10,7 @@
 // ===== FIREBASE AYARLARI =====
 #define API_KEY "AIzaSyAMHeRwya8gQiK7-5u1557chofAv-gZTWk"
 #define FIREBASE_PROJECT_ID "smart-kuehlschrank81"
-#define USER_ID "8SydQCKRI2fwzrXYK9xJQm1ZxA2"
+#define USER_ID "8SycQCKRI2fwzrXYK9xJQm1Zx42"
 
 // ===== HX711 PİNLERİ =====
 #define SCK_PIN 6

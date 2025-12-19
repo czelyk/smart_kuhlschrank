@@ -12,12 +12,40 @@ class RecipesScreen extends StatefulWidget {
 
 class _RecipesScreenState extends State<RecipesScreen> {
   final RecipeService _recipeService = RecipeService();
+  bool _isLoadingWebRecipes = false;
+  
+  // Track expanded recipes using a set of IDs
+  final Set<String> _expandedRecipeIds = {}; 
 
   void _showAddRecipeDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => const AddRecipeDialog(),
     );
+  }
+
+  Future<void> _fetchRandomRecipes(BuildContext context) async {
+    setState(() {
+      _isLoadingWebRecipes = true;
+    });
+
+    final l10n = AppLocalizations.of(context)!;
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    try {
+      await _recipeService.fetchAndAddRandomRecipes(5); // Fetch 5 random recipes
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text(l10n.recipesAddedSuccessfully)),
+      );
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('${l10n.error}: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoadingWebRecipes = false;
+      });
+    }
   }
 
   @override
@@ -27,6 +55,20 @@ class _RecipesScreenState extends State<RecipesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.recipes),
+        actions: [
+          if (_isLoadingWebRecipes)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: SizedBox(
+                  width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.cloud_download),
+              tooltip: l10n.fetchRandomRecipes,
+              onPressed: () => _fetchRandomRecipes(context),
+            ),
+        ],
       ),
       body: StreamBuilder<List<Recipe>>(
         stream: _recipeService.getRecipesStream(),
@@ -45,11 +87,26 @@ class _RecipesScreenState extends State<RecipesScreen> {
 
           return ListView.builder(
             itemCount: recipes.length,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: 80), // Add padding at bottom to avoid FAB overlap when not hidden
             itemBuilder: (context, index) {
               final recipe = recipes[index];
+              final isExpanded = _expandedRecipeIds.contains(recipe.id);
+
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ExpansionTile(
+                  key: PageStorageKey(recipe.id), // Preserve state
+                  initiallyExpanded: isExpanded,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      if (expanded) {
+                        _expandedRecipeIds.add(recipe.id);
+                      } else {
+                        _expandedRecipeIds.remove(recipe.id);
+                      }
+                    });
+                  },
                   title: Text(recipe.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                   children: [
                     Padding(
@@ -82,10 +139,12 @@ class _RecipesScreenState extends State<RecipesScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddRecipeDialog(context),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _expandedRecipeIds.isEmpty 
+        ? FloatingActionButton(
+            onPressed: () => _showAddRecipeDialog(context),
+            child: const Icon(Icons.add),
+          )
+        : null, // Hide FAB when any item is expanded
     );
   }
 }

@@ -41,5 +41,7 @@
   "ingredientName": "Zutat",
   "quantity": "Menge",
   "pleaseAddIngredients": "Bitte fügen Sie mindestens eine Zutat hinzu",
-  "pleaseEnterInstructions": "Bitte geben Sie die Zubereitungsschritte ein"
+  "pleaseEnterInstructions": "Bitte geben Sie die Zubereitungsschritte ein",
+  "recipesAddedSuccessfully": "Rezepte erfolgreich hinzugefügt",
+  "fetchRandomRecipes": "Zufällige Rezepte abrufen"
 }
