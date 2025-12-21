@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // --- Internationalization Imports ---
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smart_kuhlschrank/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:smart_kuhlschrank/providers/locale_provider.dart';
 
@@ -64,8 +64,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// ... (The rest of the file remains the same)
 
 class MainAppScreen extends StatefulWidget {
   const MainAppScreen({super.key});

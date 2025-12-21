@@ -2,7 +2,7 @@
     package="com.example.smart_kuhlschrank">
 
     <application
-        android:label="Smart Fridge"
+        android:label="Smarty"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 

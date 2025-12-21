@@ -9,10 +9,8 @@ class AuthService {
 
   User? get currentUser => _firebaseAuth.currentUser;
 
-  Future<UserCredential> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async {
+  // New method name matching LoginScreen
+  Future<UserCredential> signIn(String email, String password) async {
     try {
       return await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
@@ -23,18 +21,43 @@ class AuthService {
     }
   }
 
+  // Old method namekept for compatibility if used elsewhere (or redirect)
+  Future<UserCredential> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    return signIn(email, password);
+  }
+
+  // New method name matching LoginScreen
+  Future<UserCredential> signUp(String email, String password) async {
+    try {
+      UserCredential cred = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      // Initialize user document
+      if (cred.user != null) {
+        await _firestore.collection('users').doc(cred.user!.uid).set({
+          'email': email,
+          'createdAt': FieldValue.serverTimestamp(),
+          'languageCode': 'en', // Default
+        });
+      }
+      return cred;
+
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message);
+    }
+  }
+
+  // Old method name kept for compatibility
   Future<UserCredential> createUserWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
-    try {
-      return await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    } on FirebaseAuthException catch (e) {
-      throw Exception(e.message);
-    }
+    return signUp(email, password);
   }
 
   Future<void> signOut() async {

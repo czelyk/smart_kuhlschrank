@@ -26,12 +26,18 @@ class Recipe {
   final String name;
   final List<Ingredient> ingredients;
   final String instructions;
+  final String? imageUrl;
+  final String? category;
+  final String? area;
 
   Recipe({
     required this.id,
     required this.name,
     required this.ingredients,
     required this.instructions,
+    this.imageUrl,
+    this.category,
+    this.area,
   });
 
   factory Recipe.fromFirestore(DocumentSnapshot doc) {
@@ -46,15 +52,40 @@ class Recipe {
       name: data['name'] ?? '',
       ingredients: ingredients,
       instructions: data['instructions'] ?? '',
+      imageUrl: data['imageUrl'],
+      category: data['category'],
+      area: data['area'],
+    );
+  }
+
+  // Yeni eklenen fromMap metodu (SharedPreferences için)
+  factory Recipe.fromMap(Map<String, dynamic> map) {
+    var ingredientsList = map['ingredients'] as List<dynamic>? ?? [];
+    List<Ingredient> ingredients = ingredientsList
+        .map((i) => Ingredient.fromMap(i as Map<String, dynamic>))
+        .toList();
+
+    return Recipe(
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      ingredients: ingredients,
+      instructions: map['instructions'] ?? '',
+      imageUrl: map['imageUrl'],
+      category: map['category'],
+      area: map['area'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id, // id alanını da ekledim
       'name': name,
       'ingredients': ingredients.map((i) => i.toMap()).toList(),
       'instructions': instructions,
-      'createdAt': Timestamp.now(),
+      'imageUrl': imageUrl,
+      'category': category,
+      'area': area,
+      'createdAt': Timestamp.now().millisecondsSinceEpoch, // Timestamp yerine int olarak
     };
   }
 }
