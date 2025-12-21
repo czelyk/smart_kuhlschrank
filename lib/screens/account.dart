@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:smart_kuhlschrank/providers/locale_provider.dart';
 import 'package:smart_kuhlschrank/services/auth_service.dart';
 import 'package:smart_kuhlschrank/l10n/app_localizations.dart';
+import 'package:smart_kuhlschrank/screens/bluetooth_setup_screen.dart'; // Import Bluetooth Setup Screen
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({Key? key}) : super(key: key);
@@ -41,6 +42,8 @@ class AccountScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 40),
+          
+          // Language Setting
           ListTile(
             leading: const Icon(Icons.language, color: Colors.teal),
             title: Text(l10n.language),
@@ -67,6 +70,24 @@ class AccountScreen extends StatelessWidget {
               ],
             ),
           ),
+
+          // Bluetooth Setup (Device Linking)
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.bluetooth_connected, color: Colors.teal),
+            title: const Text("Device Setup (Smart Fridge)"), // Hardcoded until l10n updated
+            subtitle: const Text("Link ESP32 Device"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BluetoothSetupScreen()),
+              );
+            },
+          ),
+          const Divider(),
+
+          // Settings
           ListTile(
             leading: const Icon(Icons.settings, color: Colors.teal),
             title: Text(l10n.settings),

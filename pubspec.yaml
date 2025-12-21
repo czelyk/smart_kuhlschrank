@@ -22,7 +22,9 @@ dependencies:
   firebase_auth: ^5.6.0
   translator: ^1.0.0
   shared_preferences: ^2.2.2
-  cached_network_image: ^3.3.1  # Resim önbellekleme için eklendi
+  cached_network_image: ^3.3.1
+  flutter_blue_plus: ^1.31.0  # Bluetooth iletişimi için
+  permission_handler: ^11.3.0 # İzinleri yönetmek için
 
 dev_dependencies:
   flutter_test:

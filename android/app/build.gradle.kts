@@ -10,26 +10,27 @@ plugins {
 
 android {
     namespace = "com.example.smart_kuhlschrank"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    compileSdk = 34
+    // ndkVersion = "27.0.12077973" // Kaldırıldı, Flutter yönetsin
 
     compileOptions {
         // Enable core library desugaring
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = "1.8"
     }
 
     defaultConfig {
         applicationId = "com.example.smart_kuhlschrank"
-        minSdkVersion(23)
-        targetSdkVersion(33)
+        minSdkVersion(23) // Firebase Auth gereksinimi nedeniyle 23 yapıldı
+        targetSdkVersion(34)
         versionCode = 1
         versionName = "1.0"
+        multiDexEnabled = true // Büyük projeler için gerekli olabilir
     }
 
     buildTypes {
