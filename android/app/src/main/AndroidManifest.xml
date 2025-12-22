@@ -1,15 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.smart_kuhlschrank">
 
     <!-- Bluetooth Permissions for Android 11 and below -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     
     <!-- Bluetooth Permissions for Android 12 and above -->
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <!-- 'neverForLocation' flag is crucial for scanning without physical location enabled -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+                     android:usesPermissionFlags="neverForLocation"
+                     tools:targetApi="s" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <!-- ACCESS_FINE_LOCATION removed for Android 12+ as BLUETOOTH_SCAN is used -->
 
     <!-- Feature flags -->
     <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>

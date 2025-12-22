@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:smart_kuhlschrank/l10n/app_localizations.dart';
 
 class BluetoothSetupScreen extends StatefulWidget {
   const BluetoothSetupScreen({Key? key}) : super(key: key);
@@ -21,74 +20,125 @@ class _BluetoothSetupScreenState extends State<BluetoothSetupScreen> {
   bool _isScanning = false;
   BluetoothDevice? _connectedDevice;
   bool _isConnecting = false;
-  String _statusMessage = '';
-
-  // ESP32'deki Servis ve Karakteristik UUID'leri (Bunları ESP32 kodunuzla eşleştirin)
-  // Genellikle standart bir UART servisi veya kendi özel UUID'niz olabilir.
-  // Örnek olarak yaygın kullanılan Nordic UART Service UUID'lerini koyuyorum.
-  // ESP32 tarafında bunları kullanmanız veya burayı güncellemeniz gerekir.
-  final String SERVICE_UUID = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"; 
-  final String CHARACTERISTIC_UUID_RX = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"; // Yazma (Write)
-  // final String CHARACTERISTIC_UUID_TX = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"; // Okuma (Notify)
+  String _statusMessage = 'Ready to scan';
 
   @override
   void initState() {
     super.initState();
-    _checkPermissions();
+    // Ekran açılır açılmaz Bluetooth durumunu kontrol et
+    _initBluetooth();
   }
 
-  Future<void> _checkPermissions() async {
+  Future<void> _initBluetooth() async {
+    // Bluetooth durumunu dinle
+    FlutterBluePlus.adapterState.listen((state) {
+      if (state == BluetoothAdapterState.off) {
+        if (mounted) setState(() => _statusMessage = "Bluetooth is OFF");
+      }
+    });
+  }
+
+  // EN KRİTİK FONKSİYON: İZİNLER
+  Future<bool> _requestPermissions() async {
     if (Platform.isAndroid) {
-      // Android 12+ için
-      if (await Permission.bluetoothScan.request().isGranted &&
-          await Permission.bluetoothConnect.request().isGranted &&
-          await Permission.location.request().isGranted) {
-        // İzinler tamam
-      } else {
-        // Eski Android sürümleri için (Location yeterli olabilir)
+      // Android 12 ve üzeri için (API 31+)
+      if (await Permission.bluetoothScan.status.isDenied || 
+          await Permission.bluetoothConnect.status.isDenied) {
+        
+        Map<Permission, PermissionStatus> statuses = await [
+          Permission.bluetoothScan,
+          Permission.bluetoothConnect,
+          Permission.location, // Bazı cihazlar için hala gerekli
+        ].request();
+
+        if (statuses[Permission.bluetoothScan]!.isDenied || 
+            statuses[Permission.bluetoothConnect]!.isDenied) {
+          return false; // İzin verilmedi
+        }
+      }
+      
+      // Eski Android sürümleri için (Android 11 ve altı)
+      if (await Permission.location.status.isDenied) {
         await Permission.location.request();
       }
+
+      // GPS Servisi Açık mı?
+      if (!await Permission.location.serviceStatus.isEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enable GPS (Location Service)'),
+              backgroundColor: Colors.red,
+            )
+          );
+        }
+        return false;
+      }
     }
+    return true;
   }
 
   Future<void> _startScan() async {
+    // 1. İzinleri Kontrol Et
+    bool hasPermissions = await _requestPermissions();
+    if (!hasPermissions) {
+      setState(() => _statusMessage = "Missing Permissions or GPS is OFF");
+      return;
+    }
+
+    // 2. Bluetooth Açık mı?
+    if (FlutterBluePlus.adapterStateNow != BluetoothAdapterState.on) {
+      if (Platform.isAndroid) {
+        try {
+          await FlutterBluePlus.turnOn();
+        } catch (e) {
+          setState(() => _statusMessage = "Could not turn on Bluetooth");
+          return;
+        }
+      } else {
+        setState(() => _statusMessage = "Please turn on Bluetooth manually");
+        return;
+      }
+    }
+
     setState(() {
       _isScanning = true;
       _scanResults.clear();
-      _statusMessage = 'Scanning for devices...';
+      _statusMessage = 'Scanning...';
     });
 
     try {
-      // Sadece 4 saniye tara
-      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
+      // 3. TARAMA BAŞLAT (Filtresiz ve Düşük Gecikmeli)
+      await FlutterBluePlus.startScan(
+        timeout: const Duration(seconds: 15),
+        androidUsesFineLocation: true, // Konum iznini tam kullan
+      );
 
+      // Sonuçları dinle
       FlutterBluePlus.scanResults.listen((results) {
         if (mounted) {
           setState(() {
-            // Sadece ismi olan cihazları göster
-            _scanResults = results
-                .where((r) => r.device.platformName.isNotEmpty)
-                .toList();
+            _scanResults = results;
           });
         }
       });
 
-      // Tarama bittiğinde
+      // Tarama bitti mi?
       FlutterBluePlus.isScanning.listen((isScanning) {
         if (mounted) {
           setState(() {
             _isScanning = isScanning;
-            if (!isScanning && _scanResults.isEmpty) {
-              _statusMessage = 'No devices found.';
-            } else if (!isScanning) {
-              _statusMessage = 'Select your Smart Fridge';
+            if (!isScanning) {
+              _statusMessage = _scanResults.isEmpty 
+                  ? 'No devices found. Try again.' 
+                  : 'Select your device';
             }
           });
         }
       });
     } catch (e) {
       setState(() {
-        _statusMessage = 'Error scanning: $e';
+        _statusMessage = 'Scan Error: $e';
         _isScanning = false;
       });
     }
@@ -97,9 +147,7 @@ class _BluetoothSetupScreenState extends State<BluetoothSetupScreen> {
   Future<void> _connectAndSendUid(BluetoothDevice device) async {
     final user = _auth.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in!')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please login first")));
       return;
     }
 
@@ -109,159 +157,168 @@ class _BluetoothSetupScreenState extends State<BluetoothSetupScreen> {
     });
 
     try {
-      await device.connect();
+      // Bağlan
+      await device.connect(autoConnect: false); // autoConnect: false daha hızlıdır
       _connectedDevice = device;
+      
+      if (Platform.isAndroid) await device.requestMtu(512);
 
-      setState(() {
-        _statusMessage = 'Connected! Discovering services...';
-      });
-
-      // Servisleri keşfet
+      setState(() => _statusMessage = 'Discovering Services...');
       List<BluetoothService> services = await device.discoverServices();
       
       BluetoothCharacteristic? writeCharacteristic;
 
-      // Doğru servisi ve karakteristiği bul
+      // Akıllı Arama: Yazılabilir (Writable) herhangi bir karakteristik bul
       for (var service in services) {
-        // Servis UUID kontrolü (veya herhangi bir yazılabilir karakteristik bulmaya çalış)
-        // Burada basitlik adına yazılabilir (write) özelliği olan ilk karakteristiği buluyoruz
-        // ESP32 tarafında özel bir UUID kullanıyorsanız, onu filtrelemek daha iyi olur.
-        for (var characteristic in service.characteristics) {
-           if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
-             writeCharacteristic = characteristic;
-             // Eğer özel UUID eşleşiyorsa döngüyü kırabiliriz
-             if (service.uuid.toString().toUpperCase() == SERVICE_UUID || 
-                 characteristic.uuid.toString().toUpperCase() == CHARACTERISTIC_UUID_RX) {
-               break;
-             }
+        for (var c in service.characteristics) {
+           if (c.properties.write || c.properties.writeWithoutResponse) {
+               writeCharacteristic = c;
+               break; 
            }
         }
         if (writeCharacteristic != null) break;
       }
 
       if (writeCharacteristic != null) {
-        setState(() {
-          _statusMessage = 'Sending User ID...';
-        });
-
-        // UID'yi byte array'e çevirip gönder
-        String dataToSend = "UID:${user.uid}\n"; // Sonu \n ile biten bir string gönderiyoruz
+        setState(() => _statusMessage = 'Sending UID...');
+        
+        String dataToSend = "UID:${user.uid}\n";
         await writeCharacteristic.write(utf8.encode(dataToSend));
-
-        setState(() {
-          _statusMessage = 'Setup Complete! Device registered.';
-        });
-
-        // Başarılı mesajı göster
+        
         if (mounted) {
           showDialog(
             context: context,
             builder: (ctx) => AlertDialog(
-              title: const Text('Success'),
-              content: const Text('Your Smart Fridge has been successfully linked to your account!'),
+              title: const Text('Success!'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.green, size: 50),
+                  const SizedBox(height: 10),
+                  const Text('Device setup completed successfully.'),
+                  const SizedBox(height: 10),
+                  Text('UID Sent:\n${user.uid}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
               actions: [
                 TextButton(
-                  onPressed: () {
-                    Navigator.of(ctx).pop(); // Dialog kapat
-                    Navigator.of(context).pop(); // Ekranı kapat
-                  },
-                  child: const Text('OK'),
+                  onPressed: () { 
+                    Navigator.of(ctx).pop(); 
+                    Navigator.of(context).pop(); 
+                  }, 
+                  child: const Text('OK')
                 )
               ],
             ),
           );
         }
-
-        // İşi bitince bağlantıyı kesebiliriz
         await device.disconnect();
-
       } else {
-        setState(() {
-          _statusMessage = 'Error: Writable characteristic not found on device.';
-        });
+        setState(() => _statusMessage = 'Error: Device is not writable.');
         await device.disconnect();
       }
 
     } catch (e) {
-      setState(() {
-        _statusMessage = 'Connection failed: $e';
-      });
-      // Hata durumunda bağlantıyı kesmeyi dene
+      setState(() => _statusMessage = 'Connection Failed: $e');
       try { await device.disconnect(); } catch (_) {}
     } finally {
-      setState(() {
-        _isConnecting = false;
-        _connectedDevice = null;
-      });
+      if (mounted) {
+        setState(() {
+          _isConnecting = false;
+          _connectedDevice = null;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Localization desteği olmadığı için şimdilik hardcoded stringler kullanıyoruz
-    // İsterseniz l10n dosyalarına ekleyebilirsiniz.
-    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Device Setup'),
-      ),
+      appBar: AppBar(title: const Text('Device Setup')),
       body: Column(
         children: [
-          // Header
+          // Durum Paneli
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.teal.shade50,
             width: double.infinity,
+            color: Colors.teal.shade50,
             child: Column(
               children: [
-                const Icon(Icons.bluetooth_searching, size: 48, color: Colors.teal),
-                const SizedBox(height: 8),
+                if (_isScanning) const LinearProgressIndicator(),
+                const SizedBox(height: 10),
                 Text(
-                  _statusMessage.isEmpty ? 'Tap scan to find your fridge' : _statusMessage,
+                  _statusMessage,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
+                if (_scanResults.isNotEmpty) 
+                  Text("${_scanResults.length} devices found", style: const TextStyle(color: Colors.grey)),
               ],
             ),
           ),
           
-          // Device List
+          // Cihaz Listesi
           Expanded(
-            child: _isScanning 
-              ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                  itemCount: _scanResults.length,
-                  itemBuilder: (context, index) {
-                    final result = _scanResults[index];
-                    return ListTile(
-                      leading: const Icon(Icons.kitchen),
-                      title: Text(result.device.platformName),
-                      subtitle: Text(result.device.remoteId.toString()),
-                      trailing: ElevatedButton(
-                        onPressed: _isConnecting 
-                          ? null 
-                          : () => _connectAndSendUid(result.device),
-                        child: const Text('Connect'),
+            child: ListView.builder(
+              itemCount: _scanResults.length,
+              itemBuilder: (context, index) {
+                final result = _scanResults[index];
+                final name = result.device.platformName;
+                final id = result.device.remoteId.toString();
+                final rssi = result.rssi;
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      backgroundColor: Colors.teal,
+                      child: Icon(Icons.bluetooth, color: Colors.white),
+                    ),
+                    title: Text(
+                      name.isNotEmpty ? name : "Unknown Device", 
+                      style: TextStyle(
+                        fontWeight: name.isNotEmpty ? FontWeight.bold : FontWeight.normal,
+                        color: name == "Smart Fridge ESP32" ? Colors.green : Colors.black
+                      )
+                    ),
+                    subtitle: Text("$id\nSignal: $rssi dBm"),
+                    trailing: ElevatedButton(
+                      onPressed: _isConnecting ? null : () => _connectAndSendUid(result.device),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: name == "Smart Fridge ESP32" ? Colors.green : Colors.teal,
+                        foregroundColor: Colors.white
                       ),
-                    );
-                  },
-                ),
+                      child: const Text("Connect"),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
           
-          // Scan Button
+          // Tarama Butonu
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 55,
               child: ElevatedButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: Text(_isScanning ? 'Scanning...' : 'Scan for Devices'),
-                onPressed: _isScanning || _isConnecting ? null : _startScan,
+                icon: _isScanning 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
+                  : const Icon(Icons.search),
+                label: Text(_isScanning ? 'STOP SCANNING' : 'SCAN FOR DEVICES', style: const TextStyle(fontSize: 16)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
+                  backgroundColor: _isScanning ? Colors.redAccent : Colors.teal,
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
+                onPressed: () {
+                  if (_isScanning) {
+                    FlutterBluePlus.stopScan();
+                  } else {
+                    _startScan();
+                  }
+                },
               ),
             ),
           ),

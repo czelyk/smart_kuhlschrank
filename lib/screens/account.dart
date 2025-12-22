@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:smart_kuhlschrank/providers/locale_provider.dart';
 import 'package:smart_kuhlschrank/services/auth_service.dart';
 import 'package:smart_kuhlschrank/l10n/app_localizations.dart';
-import 'package:smart_kuhlschrank/screens/bluetooth_setup_screen.dart'; // Import Bluetooth Setup Screen
+import 'package:smart_kuhlschrank/screens/bluetooth_setup_screen.dart';
+import 'package:smart_kuhlschrank/screens/settings_screen.dart'; // Import Settings Screen
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({Key? key}) : super(key: key);
@@ -75,7 +76,7 @@ class AccountScreen extends StatelessWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.bluetooth_connected, color: Colors.teal),
-            title: const Text("Device Setup (Smart Fridge)"), // Hardcoded until l10n updated
+            title: const Text("Device Setup (Smart Fridge)"),
             subtitle: const Text("Link ESP32 Device"),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
@@ -91,9 +92,11 @@ class AccountScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.settings, color: Colors.teal),
             title: Text(l10n.settings),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.featureNotAvailable)),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
           ),
