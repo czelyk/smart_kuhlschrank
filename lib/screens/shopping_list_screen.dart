@@ -13,36 +13,89 @@ class ShoppingListScreen extends StatefulWidget {
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
   final ShoppingListService _shoppingListService = ShoppingListService();
 
+  // Kategori Listesi ve İkonları ('Cleaning' kaldırıldı)
+  final Map<String, IconData> _categories = {
+    'Vegetables': Icons.eco,
+    'Fruits': Icons.apple,
+    'Beverages': Icons.local_drink,
+    'Meat & Fish': Icons.restaurant,
+    'Dairy': Icons.local_pizza,
+    'Snacks': Icons.cookie,
+    'Staples': Icons.rice_bowl,
+    'Other': Icons.shopping_bag,
+  };
+
   void _showAddItemDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final TextEditingController nameController = TextEditingController();
+    String selectedCategory = 'Other'; // Varsayılan kategori
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.addNewItem),
-          content: TextField(
-            controller: nameController,
-            decoration: InputDecoration(hintText: l10n.itemName),
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.cancel),
-            ),
-            TextButton(
-              onPressed: () {
-                final name = nameController.text.trim();
-                if (name.isNotEmpty) {
-                  _shoppingListService.addItem(name);
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text(l10n.add),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(l10n.addNewItem),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // İsim Girişi
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.itemName,
+                      prefixIcon: const Icon(Icons.edit),
+                    ),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Kategori Seçimi
+                  DropdownButtonFormField<String>(
+                    value: selectedCategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _categories.keys.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Row(
+                          children: [
+                            Icon(_categories[category], color: Colors.teal),
+                            const SizedBox(width: 10),
+                            Text(category),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedCategory = newValue!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(l10n.cancel),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final name = nameController.text.trim();
+                    if (name.isNotEmpty) {
+                      _shoppingListService.addItem(name, selectedCategory); // Kategorili ekleme
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: Text(l10n.add),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -66,20 +119,31 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             return Center(child: Text('${l10n.error}: ${snapshot.error}'));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text(l10n.yourShoppingListIsEmpty));
+            return Center(child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(l10n.yourShoppingListIsEmpty, style: TextStyle(fontSize: 18, color: Colors.grey)),
+              ],
+            ));
           }
 
           final items = snapshot.data!;
 
           return ListView.builder(
+            padding: const EdgeInsets.all(8),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
               return Card(
+                elevation: 2,
+                margin: const EdgeInsets.symmetric(vertical: 4),
                 child: ListTile(
                   leading: Checkbox(
                     value: item.isBought,
                     activeColor: Colors.teal,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                     onChanged: (bool? value) {
                       _shoppingListService.toggleItemStatus(item.id, value ?? false);
                     },
@@ -88,11 +152,24 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                     item.name,
                     style: TextStyle(
                       decoration: item.isBought ? TextDecoration.lineThrough : null,
-                      color: item.isBought ? Colors.grey : Colors.black,
+                      color: item.isBought ? Colors.grey : Colors.black87,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
+                  // Kategori bilgisi ve ikonu
+                  subtitle: Row(
+                    children: [
+                      Icon(
+                        _categories[item.category] ?? Icons.shopping_bag, 
+                        size: 14, 
+                        color: Colors.grey
+                      ),
+                      const SizedBox(width: 4),
+                      Text(item.category, style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                     onPressed: () => _shoppingListService.deleteItem(item.id),
                   ),
                 ),
@@ -101,9 +178,11 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddItemDialog(context),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: Text(l10n.add),
+        backgroundColor: Colors.teal,
       ),
     );
   }

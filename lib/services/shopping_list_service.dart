@@ -25,18 +25,20 @@ class ShoppingListService {
           id: doc.id,
           name: data['name'] ?? '',
           isBought: data['isBought'] ?? false,
+          category: data['category'] ?? 'Other', // Kategoriyi oku
         );
       }).toList();
     });
   }
 
-  // Add a new item
-  Future<void> addItem(String name) async {
+  // Add a new item with category
+  Future<void> addItem(String name, String category) async {
     final collection = _getItemsCollection();
     if (collection != null) {
       await collection.add({
         'name': name,
         'isBought': false,
+        'category': category, // Kategoriyi kaydet
         'createdAt': FieldValue.serverTimestamp(),
       });
     }

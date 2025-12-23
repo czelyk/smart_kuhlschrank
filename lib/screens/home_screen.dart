@@ -14,72 +14,111 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FridgeService _fridgeService = FridgeService();
 
-  // Dialog for editing shelf names (remains unchanged)
-  Future<void> _showEditNameDialog(BuildContext context, Shelf shelf) async {
+  // Kategori Listesi ve İkonları
+  final Map<String, IconData> _categories = {
+    'Vegetables': Icons.eco,
+    'Fruits': Icons.apple,
+    'Beverages': Icons.local_drink,
+    'Meat & Fish': Icons.restaurant,
+    'Dairy': Icons.local_pizza,
+    'Snacks': Icons.cookie,
+    'Staples': Icons.rice_bowl,
+    'Other': Icons.inventory, // Raf için genel ikon
+  };
+
+  // Dialog for editing shelf name and category
+  Future<void> _showEditDialog(BuildContext context, Shelf shelf) async {
     final l10n = AppLocalizations.of(context)!;
-    final TextEditingController nameController =
-        TextEditingController(text: shelf.name);
+    final TextEditingController nameController = TextEditingController(text: shelf.name);
+    String selectedCategory = _categories.containsKey(shelf.category) ? shelf.category : 'Other';
+
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(l10n.editShelfName),
-          content: TextField(
-            controller: nameController,
-            decoration: InputDecoration(hintText: l10n.newShelfName),
-            autofocus: true,
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(l10n.cancel),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text(l10n.save),
-              onPressed: () {
-                final newName = nameController.text;
-                if (newName.isNotEmpty) {
-                  _fridgeService.updateShelfName(shelf.id, newName);
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(l10n.editShelfName), // Veya "Edit Shelf"
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // İsim Değiştirme
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.newShelfName,
+                      prefixIcon: const Icon(Icons.edit),
+                    ),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Kategori Seçimi
+                  DropdownButtonFormField<String>(
+                    value: selectedCategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _categories.keys.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Row(
+                          children: [
+                            Icon(_categories[category], color: Colors.teal),
+                            const SizedBox(width: 10),
+                            Text(category),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedCategory = newValue!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text(l10n.cancel),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ElevatedButton(
+                  child: Text(l10n.save),
+                  onPressed: () {
+                    final newName = nameController.text.trim();
+                    if (newName.isNotEmpty) {
+                      // Hem ismi hem kategoriyi güncelle
+                      _fridgeService.updateShelf(shelf.id, newName, selectedCategory);
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
 
-  /// Builds the new card to display fridge status, now with error handling.
   Widget _buildFridgeStatusCard() {
     return StreamBuilder<FridgeStatus>(
       stream: _fridgeService.getFridgeStatusStream(),
       builder: (context, snapshot) {
         final l10n = AppLocalizations.of(context)!;
 
-        // --- DIAGNOSTIC: Explicitly handle errors ---
         if (snapshot.hasError) {
           return Card(
             margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            color: Colors.red[100], // Red background for errors
+            color: Colors.red[100],
             child: Padding(
               padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${l10n.error} (Status Card):',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red[900]),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${snapshot.error}',
-                    style: TextStyle(color: Colors.red[800]),
-                  ),
-                ],
-              ),
+              child: Text('${l10n.error}: ${snapshot.error}'),
             ),
           );
         }
@@ -94,9 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
-        if (!snapshot.hasData) {
-          return const SizedBox.shrink(); // Don't show anything if there is no data
-        }
+        if (!snapshot.hasData) return const SizedBox.shrink();
 
         final status = snapshot.data!;
 
@@ -109,8 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _StatusIcon(icon: Icons.thermostat, value: '${status.temperature.toStringAsFixed(1)}°C', label: 'Sıcaklık'),
-                _StatusIcon(icon: Icons.opacity, value: '${status.humidity.toStringAsFixed(1)}%', label: 'Nem'),
+                _StatusIcon(icon: Icons.thermostat, value: '${status.temperature.toStringAsFixed(1)}°C', label: 'Temperature'),
+                _StatusIcon(icon: Icons.opacity, value: '${status.humidity.toStringAsFixed(1)}%', label: 'Humidity'),
               ],
             ),
           ),
@@ -129,10 +166,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // 1. The Fridge Status Card (now with error display)
           _buildFridgeStatusCard(),
 
-          // 2. The existing list of shelves
           Expanded(
             child: StreamBuilder<List<Shelf>>(
               stream: _fridgeService.getShelvesStream(),
@@ -158,25 +193,34 @@ class _HomeScreenState extends State<HomeScreen> {
                       elevation: 4,
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(16),
-                        leading: const Icon(
-                          Icons.inventory_2_outlined,
-                          color: Colors.teal,
-                          size: 40,
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.teal.shade50,
+                          radius: 25,
+                          child: Icon(
+                            _categories[shelf.category] ?? Icons.inventory_2_outlined,
+                            color: Colors.teal,
+                            size: 30,
+                          ),
                         ),
                         title: Text(
                           shelf.name,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        subtitle: Text(
+                          shelf.category, 
+                          style: TextStyle(color: Colors.teal.shade700, fontWeight: FontWeight.w500)
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               '${shelf.weight.toStringAsFixed(2)} kg',
-                              style: const TextStyle(fontSize: 16, color: Colors.black54),
+                              style: const TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.bold),
                             ),
+                            const SizedBox(width: 8),
                             IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () => _showEditNameDialog(context, shelf),
+                              icon: const Icon(Icons.edit, color: Colors.blueGrey),
+                              onPressed: () => _showEditDialog(context, shelf),
                             ),
                           ],
                         ),
@@ -193,7 +237,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// A helper widget to display a status icon, value, and label.
 class _StatusIcon extends StatelessWidget {
   final IconData icon;
   final String value;
