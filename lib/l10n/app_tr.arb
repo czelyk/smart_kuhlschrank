@@ -54,6 +54,11 @@
   "searchResults": "Arama Sonuçları",
   "addSelected": "Seçilenleri Ekle",
   "noResultsFound": "Sonuç bulunamadı.",
+  "bottleVolume": "Şişe Hacmi (L)",
+  "containerType": "Kap Türü",
+  "glass": "Cam",
+  "plastic": "Plastik",
+  "bottles": "Şişe",
 
   "catBeef": "Sığır Eti",
   "catBreakfast": "Kahvaltı",

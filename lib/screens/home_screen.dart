@@ -30,7 +30,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _showEditDialog(BuildContext context, Shelf shelf) async {
     final l10n = AppLocalizations.of(context)!;
     final TextEditingController nameController = TextEditingController(text: shelf.name);
+    final TextEditingController volumeController = TextEditingController(text: shelf.bottleVolume?.toString() ?? '0.5');
+
     String selectedCategory = _categories.containsKey(shelf.category) ? shelf.category : 'Other';
+    String selectedContainerType = shelf.containerType ?? 'glass';
 
     return showDialog<void>(
       context: context,
@@ -38,47 +41,79 @@ class _HomeScreenState extends State<HomeScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(l10n.editShelfName), // Veya "Edit Shelf"
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // İsim Değiştirme
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: l10n.newShelfName,
-                      prefixIcon: const Icon(Icons.edit),
+              title: Text(l10n.editShelfName),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // İsim Değiştirme
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: l10n.newShelfName,
+                        prefixIcon: const Icon(Icons.edit),
+                      ),
+                      autofocus: true,
                     ),
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Kategori Seçimi
-                  DropdownButtonFormField<String>(
-                    value: selectedCategory,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 16),
+                    
+                    // Kategori Seçimi
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      decoration: const InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _categories.keys.map((String category) {
+                        return DropdownMenuItem<String>(
+                          value: category,
+                          child: Row(
+                            children: [
+                              Icon(_categories[category], color: Colors.teal),
+                              const SizedBox(width: 10),
+                              Text(category),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedCategory = newValue!;
+                        });
+                      },
                     ),
-                    items: _categories.keys.map((String category) {
-                      return DropdownMenuItem<String>(
-                        value: category,
-                        child: Row(
-                          children: [
-                            Icon(_categories[category], color: Colors.teal),
-                            const SizedBox(width: 10),
-                            Text(category),
-                          ],
+
+                    if (selectedCategory == 'Beverages') ...[
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: volumeController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: InputDecoration(
+                          labelText: l10n.bottleVolume,
+                          suffixText: "L",
+                          border: const OutlineInputBorder(),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedCategory = newValue!;
-                      });
-                    },
-                  ),
-                ],
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: selectedContainerType,
+                        decoration: InputDecoration(
+                          labelText: l10n.containerType,
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: [
+                          DropdownMenuItem(value: 'glass', child: Text(l10n.glass)),
+                          DropdownMenuItem(value: 'plastic', child: Text(l10n.plastic)),
+                        ],
+                        onChanged: (val) {
+                          setState(() {
+                            selectedContainerType = val!;
+                          });
+                        },
+                      ),
+                    ],
+                  ],
+                ),
               ),
               actions: <Widget>[
                 TextButton(
@@ -92,8 +127,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () {
                     final newName = nameController.text.trim();
                     if (newName.isNotEmpty) {
-                      // Hem ismi hem kategoriyi güncelle
-                      _fridgeService.updateShelf(shelf.id, newName, selectedCategory);
+                      double? volume;
+                      String? containerType;
+
+                      if (selectedCategory == 'Beverages') {
+                         volume = double.tryParse(volumeController.text.replaceAll(',', '.'));
+                         containerType = selectedContainerType;
+                      }
+
+                      _fridgeService.updateShelf(
+                          shelf.id, 
+                          newName, 
+                          selectedCategory, 
+                          bottleVolume: volume, 
+                          containerType: containerType
+                      );
                       Navigator.of(context).pop();
                     }
                   },
@@ -156,6 +204,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildWeightDisplay(Shelf shelf, AppLocalizations l10n) {
+      if (shelf.category == 'Beverages' && shelf.bottleVolume != null && shelf.bottleVolume! > 0) {
+          double singleWeight;
+          // Estimation based on user input:
+          // Glass: Empty weight approx 70% of volume (e.g. 0.5L -> 0.35kg empty + 0.5kg liquid = 0.85kg)
+          // Total factor = 1.7
+          if (shelf.containerType == 'glass') {
+              singleWeight = shelf.bottleVolume! * 1.7; 
+          } else {
+              // Plastic: Empty weight approx 5% of volume.
+              // Total factor = 1.05
+              singleWeight = shelf.bottleVolume! * 1.05; 
+          }
+          
+          if (singleWeight <= 0) return Text('${shelf.weight.toStringAsFixed(2)} kg');
+
+          int count = (shelf.weight / singleWeight).round();
+          return Text(
+              '$count ${l10n.bottles}', 
+              style: const TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.bold),
+          );
+      }
+      
+      return Text(
+          '${shelf.weight.toStringAsFixed(2)} kg',
+          style: const TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.bold),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -213,10 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              '${shelf.weight.toStringAsFixed(2)} kg',
-                              style: const TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.bold),
-                            ),
+                            _buildWeightDisplay(shelf, l10n),
                             const SizedBox(width: 8),
                             IconButton(
                               icon: const Icon(Icons.edit, color: Colors.blueGrey),

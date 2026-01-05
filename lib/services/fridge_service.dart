@@ -46,15 +46,26 @@ class FridgeService {
   }
 
   // Hem ismi hem kategoriyi güncelleyen fonksiyon
-  Future<void> updateShelf(String shelfId, String newName, String newCategory) async {
+  Future<void> updateShelf(String shelfId, String newName, String newCategory, {double? bottleVolume, String? containerType}) async {
     final User? user = _auth.currentUser;
     if (user == null) return;
     
     final docPath = _db.collection('users').doc(user.uid).collection('platforms').doc(shelfId);
 
-    await docPath.update({
+    Map<String, dynamic> data = {
       'name': newName,
       'category': newCategory,
-    });
+    };
+
+    if (newCategory == 'Beverages') {
+       data['bottleVolume'] = bottleVolume;
+       data['containerType'] = containerType;
+    } else {
+       // Eğer kategori içecek değilse bu alanları silebiliriz veya null yapabiliriz
+       data['bottleVolume'] = FieldValue.delete();
+       data['containerType'] = FieldValue.delete();
+    }
+
+    await docPath.update(data);
   }
 }

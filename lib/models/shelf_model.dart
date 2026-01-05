@@ -6,12 +6,16 @@ class Shelf {
   final String name;    // A user-friendly name for the shelf (e.g., 'Platform 1').
   final double weight;  // The current weight on the shelf in kilograms.
   final String category; // The category of items stored on this shelf (e.g., 'Vegetables').
+  final double? bottleVolume; // Volume of the bottle in Liters (if Beverage)
+  final String? containerType; // Type of container: 'glass' or 'plastic' (if Beverage)
 
   Shelf({
     required this.id, 
     required this.name, 
     required this.weight,
-    required this.category, // Zorunlu alan yaptık, varsayılan değer factory'de atanacak
+    required this.category,
+    this.bottleVolume,
+    this.containerType,
   });
 
   /// Creates a Shelf instance from a Firestore document snapshot.
@@ -38,7 +42,9 @@ class Shelf {
       id: doc.id,
       name: data['name'] ?? defaultName,
       weight: (data['weight'] ?? 0.0).toDouble(),
-      category: data['category'] ?? 'Other', // Veritabanında yoksa 'Other' ata
+      category: data['category'] ?? 'Other',
+      bottleVolume: data['bottleVolume'] != null ? (data['bottleVolume'] as num).toDouble() : null,
+      containerType: data['containerType'],
     );
   }
 }

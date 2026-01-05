@@ -54,6 +54,11 @@
   "searchResults": "Suchergebnisse",
   "addSelected": "Ausgewählte hinzufügen",
   "noResultsFound": "Keine Ergebnisse gefunden.",
+  "bottleVolume": "Flaschenvolumen (L)",
+  "containerType": "Behältertyp",
+  "glass": "Glas",
+  "plastic": "Plastik",
+  "bottles": "Flaschen",
 
   "catBeef": "Rindfleisch",
   "catBreakfast": "Frühstück",
