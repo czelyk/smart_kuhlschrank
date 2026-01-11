@@ -99,5 +99,17 @@
   "areaThai": "Tayland",
   "areaTunisian": "Tunus",
   "areaTurkish": "Türk",
-  "areaVietnamese": "Vietnam"
+  "areaVietnamese": "Vietnam",
+
+  "calibration": "Kalibrasyon",
+  "sensorCalibration": "Sensör Kalibrasyonu",
+  "emptyPlatforms": "Platformların üzerini boşaltın.",
+  "setZero": "Sıfırla (Dara)",
+  "place800gP1": "Platform 1 üzerine 800g ağırlık yerleştirin.",
+  "place800gP2": "Platform 2 üzerine 800g ağırlık yerleştirin.",
+  "calibrateP1": "Platform 1'i Kalibre Et",
+  "calibrateP2": "Platform 2'yi Kalibre Et",
+  "calibrationComplete": "Kalibrasyon başarıyla tamamlandı.",
+  "startCalibration": "Kalibrasyonu Başlat",
+  "step": "Adım"
 }

@@ -682,6 +682,72 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Vietnamesisch'**
   String get areaVietnamese;
+
+  /// No description provided for @calibration.
+  ///
+  /// In de, this message translates to:
+  /// **'Kalibrierung'**
+  String get calibration;
+
+  /// No description provided for @sensorCalibration.
+  ///
+  /// In de, this message translates to:
+  /// **'Sensorkalibrierung'**
+  String get sensorCalibration;
+
+  /// No description provided for @emptyPlatforms.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Plattformen leeren.'**
+  String get emptyPlatforms;
+
+  /// No description provided for @setZero.
+  ///
+  /// In de, this message translates to:
+  /// **'Nullsetzen (Tara)'**
+  String get setZero;
+
+  /// No description provided for @place800gP1.
+  ///
+  /// In de, this message translates to:
+  /// **'Legen Sie 800g auf Plattform 1.'**
+  String get place800gP1;
+
+  /// No description provided for @place800gP2.
+  ///
+  /// In de, this message translates to:
+  /// **'Legen Sie 800g auf Plattform 2.'**
+  String get place800gP2;
+
+  /// No description provided for @calibrateP1.
+  ///
+  /// In de, this message translates to:
+  /// **'Plattform 1 kalibrieren'**
+  String get calibrateP1;
+
+  /// No description provided for @calibrateP2.
+  ///
+  /// In de, this message translates to:
+  /// **'Plattform 2 kalibrieren'**
+  String get calibrateP2;
+
+  /// No description provided for @calibrationComplete.
+  ///
+  /// In de, this message translates to:
+  /// **'Kalibrierung erfolgreich abgeschlossen.'**
+  String get calibrationComplete;
+
+  /// No description provided for @startCalibration.
+  ///
+  /// In de, this message translates to:
+  /// **'Kalibrierung starten'**
+  String get startCalibration;
+
+  /// No description provided for @step.
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt'**
+  String get step;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

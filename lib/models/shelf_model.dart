@@ -41,7 +41,8 @@ class Shelf {
     return Shelf(
       id: doc.id,
       name: data['name'] ?? defaultName,
-      weight: (data['weight'] ?? 0.0).toDouble(),
+      // Firestore'daki 'current_weight_kg' alanını okuyoruz. Eğer yoksa 'weight' alanına bakıyoruz.
+      weight: (data['current_weight_kg'] ?? data['weight'] ?? 0.0).toDouble(),
       category: data['category'] ?? 'Other',
       bottleVolume: data['bottleVolume'] != null ? (data['bottleVolume'] as num).toDouble() : null,
       containerType: data['containerType'],

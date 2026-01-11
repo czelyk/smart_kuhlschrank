@@ -99,5 +99,17 @@
   "areaThai": "Thailändisch",
   "areaTunisian": "Tunesisch",
   "areaTurkish": "Türkisch",
-  "areaVietnamese": "Vietnamesisch"
+  "areaVietnamese": "Vietnamesisch",
+
+  "calibration": "Kalibrierung",
+  "sensorCalibration": "Sensorkalibrierung",
+  "emptyPlatforms": "Alle Plattformen leeren.",
+  "setZero": "Nullsetzen (Tara)",
+  "place800gP1": "Legen Sie 800g auf Plattform 1.",
+  "place800gP2": "Legen Sie 800g auf Plattform 2.",
+  "calibrateP1": "Plattform 1 kalibrieren",
+  "calibrateP2": "Plattform 2 kalibrieren",
+  "calibrationComplete": "Kalibrierung erfolgreich abgeschlossen.",
+  "startCalibration": "Kalibrierung starten",
+  "step": "Schritt"
 }

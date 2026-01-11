@@ -297,4 +297,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get areaVietnamese => 'Vietnamese';
+
+  @override
+  String get calibration => 'Calibration';
+
+  @override
+  String get sensorCalibration => 'Sensor Calibration';
+
+  @override
+  String get emptyPlatforms => 'Clear all platforms.';
+
+  @override
+  String get setZero => 'Set Zero (Tare)';
+
+  @override
+  String get place800gP1 => 'Place 800g on Platform 1.';
+
+  @override
+  String get place800gP2 => 'Place 800g on Platform 2.';
+
+  @override
+  String get calibrateP1 => 'Calibrate Platform 1';
+
+  @override
+  String get calibrateP2 => 'Calibrate Platform 2';
+
+  @override
+  String get calibrationComplete => 'Calibration completed successfully.';
+
+  @override
+  String get startCalibration => 'Start Calibration';
+
+  @override
+  String get step => 'Step';
 }

@@ -297,4 +297,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get areaVietnamese => 'Vietnamesisch';
+
+  @override
+  String get calibration => 'Kalibrierung';
+
+  @override
+  String get sensorCalibration => 'Sensorkalibrierung';
+
+  @override
+  String get emptyPlatforms => 'Alle Plattformen leeren.';
+
+  @override
+  String get setZero => 'Nullsetzen (Tara)';
+
+  @override
+  String get place800gP1 => 'Legen Sie 800g auf Plattform 1.';
+
+  @override
+  String get place800gP2 => 'Legen Sie 800g auf Plattform 2.';
+
+  @override
+  String get calibrateP1 => 'Plattform 1 kalibrieren';
+
+  @override
+  String get calibrateP2 => 'Plattform 2 kalibrieren';
+
+  @override
+  String get calibrationComplete => 'Kalibrierung erfolgreich abgeschlossen.';
+
+  @override
+  String get startCalibration => 'Kalibrierung starten';
+
+  @override
+  String get step => 'Schritt';
 }

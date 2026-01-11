@@ -297,4 +297,37 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get areaVietnamese => 'Vietnam';
+
+  @override
+  String get calibration => 'Kalibrasyon';
+
+  @override
+  String get sensorCalibration => 'Sensör Kalibrasyonu';
+
+  @override
+  String get emptyPlatforms => 'Platformların üzerini boşaltın.';
+
+  @override
+  String get setZero => 'Sıfırla (Dara)';
+
+  @override
+  String get place800gP1 => 'Platform 1 üzerine 800g ağırlık yerleştirin.';
+
+  @override
+  String get place800gP2 => 'Platform 2 üzerine 800g ağırlık yerleştirin.';
+
+  @override
+  String get calibrateP1 => 'Platform 1\'i Kalibre Et';
+
+  @override
+  String get calibrateP2 => 'Platform 2\'yi Kalibre Et';
+
+  @override
+  String get calibrationComplete => 'Kalibrasyon başarıyla tamamlandı.';
+
+  @override
+  String get startCalibration => 'Kalibrasyonu Başlat';
+
+  @override
+  String get step => 'Adım';
 }
