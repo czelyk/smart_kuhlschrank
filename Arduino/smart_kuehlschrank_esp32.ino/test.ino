@@ -1,62 +1,41 @@
-#include <Arduino.h>
-#include "HX711_ADC.h"
+#include "HX711.h"
 
-// ===== HX711 PİN TANIMLARI =====
-#define SCK_PIN 6
-#define P1_DOUT 4
+static const int HX_DOUT = 4;
+static const int HX_SCK  = 6;
 
-// ===== LED PINLERİ =====
-#define LED1_PIN 18
+HX711 scale;
 
-// ===== AYARLAR =====
-#define STABILIZING_TIME 5000    // Daha uzun stabilize süresi
-#define AVERAGE_SAMPLES 5        // Ortalama için son 5 ölçümü kullan
+long raw0 = 0;
+float k = 1.0f;
 
-// ===== NESNELER =====
-HX711_ADC scale1(P1_DOUT, SCK_PIN);
-float rawBuffer[AVERAGE_SAMPLES];
-int rawIndex = 0;
-
+long readAvg(int n=20){
+  long sum = 0;
+  for(int i=0;i<n;i++){
+    sum += scale.read();
+    delay(5);
+  }
+  return sum / n;
+}
 void setup() {
   Serial.begin(115200);
+  delay(500);
+
+  scale.begin(HX_DOUT, HX_SCK);
+  Serial.print("Plattengewicht:  ");
+  raw0 = readAvg(30);
+  Serial.println(raw0);
   delay(2000);
-  Serial.println("\n\n=== PLATFORM1 HAM VERI TESTI BASLIYOR ===");
-
-  // LED pinini OUTPUT olarak ayarla ve aç
-  pinMode(LED1_PIN, OUTPUT);
-  digitalWrite(LED1_PIN, HIGH);
-
-  // Platform1 sensörünü başlat
-  scale1.begin();
-  scale1.start(STABILIZING_TIME, true);
-
-  // Tare (sıfırlama) yap
-  scale1.tareNoDelay();
-
-  // Bufferı sıfırla
-  for(int i=0; i<AVERAGE_SAMPLES; i++) rawBuffer[i] = 0;
-
-  Serial.println("Sistem hazır. Platform1 ham verisi gösteriliyor...");
+  Serial.print("Referenzgewicht platzieren...");
+  delay(5000);
+  long dRef = readAvg(30);
+  const float gRef = 800.0f;       // Referenzgewicht individuell einstellen zum Umrechnen
+  k = gRef / (dRef - raw0);
 }
 
 void loop() {
-  scale1.update();
-
-  // Ham veriyi oku
-  float raw1 = scale1.getData();
-
-  // Buffera ekle
-  rawBuffer[rawIndex] = raw1;
-  rawIndex = (rawIndex + 1) % AVERAGE_SAMPLES;
-
-  // Ortalama al
-  float sum = 0;
-  for(int i=0; i<AVERAGE_SAMPLES; i++) sum += rawBuffer[i];
-  float averageRaw = sum / AVERAGE_SAMPLES;
-
-  // Seri monitöre yazdır
-  Serial.println("\n>> Ham veri (ortalama):");
-  Serial.println("Platform1 raw: " + String(averageRaw, 2));
-
-  delay(500); // Çok hızlı yazmaması için kısa bekleme
+  long raw = readAvg(30);   // 24-bit Rohwert
+  float m = (raw - raw0) * k;
+  Serial.print("Gewicht: ");
+  Serial.println(m,1);
+  delay(2000);
 }
