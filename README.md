@@ -1,56 +1,95 @@
-# 🧊 Smarty: Smart Fridge System (IoT & Mobile)
+🧊 Smarty: Intelligentes Kühlschranksystem (IoT & Mobile)
 
-This project is a comprehensive IoT system that tracks the weight of products inside a refrigerator in real-time, can be calibrated via Bluetooth, and analyzes data through an Admin Panel over Firebase Firestore.
+Dieses Projekt ist ein umfassendes IoT-System, das das Gewicht der Produkte im Kühlschrank in Echtzeit erfasst, über Bluetooth kalibriert werden kann und die Daten über ein Admin-Panel mit Firebase Firestore analysiert.
 
----
+📂 Projektstruktur und Dateipfade
+1. ESP32 (IoT-Gerät) – Code
 
-## 📂 Project Structure and File Locations
+Speicherort: /Arduino/smart_kuehlschrank_esp32.ino/esp32.ino
 
-### 1. ESP32 (IoT Device) Codes
-**Location:** `/Arduino/smart_kuehlschrank_esp32.ino/esp32.ino`
-*   **Task:** Reading data from weight sensors (HX711), receiving configuration via Bluetooth, and sending data to Firebase.
-*   **Segmentation:** The code is divided into 3 main sections (Ahmet, Tobias, Lucas) as per the instructor's requirement.
+Aufgabe:
 
-### 2. Mobile Application (Flutter)
-**Location:** `/lib`
-*   **User Application:** The main application where users set up the fridge, pair via Bluetooth, and perform calibration.
-*   **Admin Panel:** A panel where market analysis, user tracking, and AI-based consumption patterns are monitored.
+Auslesen der Gewichtssensoren (HX711)
 
----
+Empfang von Konfigurationsdaten über Bluetooth
 
-## 🛠️ Technical Specifications
+Übertragung der Daten an Firebase
 
-### 🦾 Inline Assembly Usage
-The ESP32 code utilizes 3 different assembly code snippets suitable for the processor architecture (Xtensa):
-1.  **WiFi Counter (`addi`):** Counts WiFi connection attempts at the hardware level. (Ahmet)
-2.  **Synchronization (`nop`):** Pauses the processor at a micro-second level before Bluetooth data processing. (Tobias)
-3.  **Arithmetic Operation (`add`):** Performs fast addition during data packaging. (Lucas)
+Segmentierung:
+Der Code ist gemäß den Anforderungen des Dozenten in drei Hauptbereiche unterteilt (Ahmet, Tobias, Lucas).
 
-### 🔵 Bluetooth (BLE) Management
-The device is fully dynamic during the setup phase:
-*   **UID Setting:** The user ID that the device will send data to is determined via the `UID:user_id` command from the app.
-*   **WiFi Setting:** The network credentials are set via the `WIFI:ssid;password` command.
-*   **Precision Calibration:** Sensors are calibrated using an 800g (0.8kg) reference weight via the `CAL:P1:800` command.
+2. Mobile Anwendung (Flutter)
 
-### 📊 Data & Analytics
-*   **Firebase Firestore:** Data is stored under `users/{userId}/platforms/`.
-*   **Gatt 133 Solution:** The `PROPERTY_WRITE_NR` (No Response) mode is used to prevent Bluetooth instability issues common on Android devices.
+Speicherort: /lib
 
----
+Benutzeranwendung:
+Die Haupt-App, in der Benutzer den Kühlschrank einrichten, das Gerät über Bluetooth koppeln und die Kalibrierung durchführen.
 
-## 🚀 Setup and Running
+Admin-Panel:
+Ein Verwaltungsbereich zur Marktanalyse, Nutzerverfolgung und Überwachung KI-basierter Verbrauchsmuster.
 
-1.  **Device Firmware:** Upload the code in the `/Arduino` folder to the ESP32 using the Arduino IDE.
-2.  **Mobile Application:**
-    *   Install dependencies with the `flutter pub get` command.
-    *   Start the application with `flutter run`.
-3.  **Device Connection:**
-    *   Find and pair the ESP32 from the "Account" -> "Device Setup" section in the app.
-    *   Calibrate the scales with an 800-gram weight from the "Sensor Calibration" tab.
+🛠️ Technische Spezifikationen
+🦾 Verwendung von Inline-Assembly
 
----
+Der ESP32-Code enthält drei verschiedene Inline-Assembly-Sequenzen, passend zur Xtensa-Prozessorarchitektur:
 
-## 👥 Developers and Responsibilities
-*   **Ahmet:** WiFi Architecture, Global Settings, Assembly (Counter).
-*   **Tobias:** Bluetooth (BLE) Services, Calibration Logic, Assembly (Delay).
-*   **Lucas:** Firebase Data Transmission, Sensor Reading, Assembly (Addition).
+WiFi-Zähler (addi)
+Zählt WLAN-Verbindungsversuche auf Hardware-Ebene. (Ahmet)
+
+Synchronisation (nop)
+Stoppt den Prozessor im Mikrosekundenbereich vor der Bluetooth-Datenverarbeitung. (Tobias)
+
+Arithmetische Operation (add)
+Führt schnelle Additionen bei der Datenverpackung aus. (Lucas)
+
+🔵 Bluetooth (BLE)-Verwaltung
+
+Während der Einrichtungsphase arbeitet das Gerät vollständig dynamisch:
+
+UID-Festlegung:
+Die Benutzer-ID, an die das Gerät Daten sendet, wird über den Befehl
+UID:user_id aus der App gesetzt.
+
+WiFi-Konfiguration:
+Netzwerkdaten werden über den Befehl
+WIFI:ssid;password übermittelt.
+
+Präzisionskalibrierung:
+Die Sensoren werden mit einem 800g (0,8kg) Referenzgewicht über den Befehl
+CAL:P1:800 kalibriert.
+
+📊 Daten & Analyse
+
+Firebase Firestore:
+Die Daten werden unter users/{userId}/platforms/ gespeichert.
+
+Gatt 133 Lösung:
+Zur Vermeidung von Bluetooth-Instabilitäten (häufig bei Android-Geräten) wird der Modus
+PROPERTY_WRITE_NR (No Response) verwendet.
+
+🚀 Einrichtung und Ausführung
+Geräte-Firmware
+
+Den Code aus dem Ordner /Arduino mit der Arduino IDE auf den ESP32 hochladen.
+
+Mobile Anwendung
+
+Abhängigkeiten installieren mit:
+flutter pub get
+
+Anwendung starten mit:
+flutter run
+
+Geräteverbindung
+
+Den ESP32 in der App unter „Account“ → „Device Setup“ suchen und koppeln.
+
+Die Waagen im Bereich „Sensor Calibration“ mit einem 800g-Gewicht kalibrieren.
+
+👥 Entwickler und Verantwortlichkeiten
+
+Ahmet: WiFi-Architektur, globale Einstellungen, Assembly (Zähler)
+
+Tobias: Bluetooth (BLE)-Services, Kalibrierungslogik, Assembly (Delay)
+
+Lucas: Firebase-Datenübertragung, Sensorauslesung, Assembly (Addition)
