@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:smart_kuhlschrank/l10n/app_localizations.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -18,42 +20,86 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   BluetoothCharacteristic? _writeCharacteristic;
   String _statusMessage = "";
 
+  Future<bool> _requestPermissions() async {
+    if (Platform.isAndroid) {
+      Map<Permission, PermissionStatus> statuses = await [
+        Permission.bluetoothScan,
+        Permission.bluetoothConnect,
+        Permission.location,
+      ].request();
+
+      if (statuses[Permission.bluetoothScan]!.isDenied || 
+          statuses[Permission.bluetoothConnect]!.isDenied) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   Future<void> _findAndConnect() async {
     setState(() {
       _isConnecting = true;
-      _statusMessage = "Searching for device...";
+      _statusMessage = "İzinler kontrol ediliyor...";
     });
 
-    try {
-      // 1. Tarama başlat
-      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
-      
-      Completer<BluetoothDevice?> completer = Completer();
-      var subscription = FlutterBluePlus.scanResults.listen((results) {
-        for (ScanResult r in results) {
-          if (r.device.platformName == "Smart Fridge ESP32") {
-            completer.complete(r.device);
-            FlutterBluePlus.stopScan();
-            break;
-          }
-        }
+    if (!await _requestPermissions()) {
+      setState(() {
+        _isConnecting = false;
+        _statusMessage = "Bluetooth izinleri verilmedi.";
       });
+      return;
+    }
 
-      _targetDevice = await completer.future.timeout(const Duration(seconds: 10), onTimeout: () => null);
-      await subscription.cancel();
+    setState(() => _statusMessage = "Cihaz aranıyor...");
+
+    try {
+      // 1. Önce halihazırda bağlı cihazlara bak (Bağlı kalmış olabilir)
+      List<BluetoothDevice> connectedDevices = FlutterBluePlus.connectedDevices;
+      for (var device in connectedDevices) {
+        if (device.platformName == "Smart Fridge ESP32" || device.advName == "Smart Fridge ESP32") {
+          _targetDevice = device;
+          break;
+        }
+      }
+
+      // 2. Bağlı değilse tarama yap
+      if (_targetDevice == null) {
+        await FlutterBluePlus.startScan(timeout: const Duration(seconds: 8));
+        
+        Completer<BluetoothDevice?> completer = Completer();
+        var subscription = FlutterBluePlus.scanResults.listen((results) {
+          for (ScanResult r in results) {
+            final name = r.device.platformName.isNotEmpty ? r.device.platformName : r.advertisementData.advName;
+            if (name == "Smart Fridge ESP32") {
+              if (!completer.isCompleted) {
+                completer.complete(r.device);
+                FlutterBluePlus.stopScan();
+              }
+              break;
+            }
+          }
+        });
+
+        _targetDevice = await completer.future.timeout(const Duration(seconds: 10), onTimeout: () => null);
+        await subscription.cancel();
+      }
 
       if (_targetDevice == null) {
         setState(() {
           _isConnecting = false;
-          _statusMessage = "Device not found. Please make sure it's on.";
+          _statusMessage = "Cihaz bulunamadı. Lütfen ESP32'nin açık olduğundan emin olun.";
         });
         return;
       }
 
-      // 2. Bağlan
-      await _targetDevice!.connect();
+      // 3. Bağlan (Zaten bağlıysa hata vermez)
+      setState(() => _statusMessage = "Cihaza bağlanılıyor...");
+      await _targetDevice!.connect(autoConnect: false).timeout(const Duration(seconds: 10));
+      
+      setState(() => _statusMessage = "Servisler keşfediliyor...");
       List<BluetoothService> services = await _targetDevice!.discoverServices();
       
+      _writeCharacteristic = null;
       for (var service in services) {
         for (var c in service.characteristics) {
           if (c.properties.write || c.properties.writeWithoutResponse) {
@@ -66,12 +112,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
       setState(() {
         _isConnecting = false;
-        _statusMessage = "Connected to device.";
+        _statusMessage = _writeCharacteristic != null ? "Cihaz Hazır." : "Hata: Yazılabilir özellik bulunamadı.";
       });
     } catch (e) {
       setState(() {
         _isConnecting = false;
-        _statusMessage = "Error: $e";
+        _statusMessage = "Hata: $e";
       });
     }
   }
@@ -85,17 +131,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       try {
         await _writeCharacteristic!.write(utf8.encode(command));
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Command sent: $command"), backgroundColor: Colors.green),
+          SnackBar(content: Text("Komut gönderildi: $command"), backgroundColor: Colors.green),
         );
       } catch (e) {
-        setState(() => _statusMessage = "Send Error: $e");
+        setState(() => _statusMessage = "Gönderim Hatası: $e");
+        _writeCharacteristic = null; // Bağlantı kopmuş olabilir, sıfırla
       }
     }
   }
 
   @override
   void dispose() {
-    _targetDevice?.disconnect();
+    // Sayfadan çıkınca bağlantıyı koparma (Opsiyonel: Uygulama yapısına göre kalabilir de)
+    // _targetDevice?.disconnect(); 
     super.dispose();
   }
 
@@ -112,16 +160,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              l10n.sensorCalibration,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
+            if (_isConnecting) const LinearProgressIndicator(),
             const SizedBox(height: 10),
             Text(
-              _statusMessage,
+              _statusMessage.isEmpty ? "Kalibrasyona başlamak için butona basın." : _statusMessage,
               textAlign: TextAlign.center,
-              style: TextStyle(color: _statusMessage.contains("Error") ? Colors.red : Colors.teal),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: _statusMessage.contains("Hata") ? Colors.red : Colors.teal
+              ),
             ),
             const SizedBox(height: 30),
             
@@ -197,7 +244,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     required bool isActive,
     required bool isCompleted,
   }) {
-    final l10n = AppLocalizations.of(context)!;
     return Opacity(
       opacity: isActive ? 1.0 : 0.5,
       child: Card(
@@ -230,7 +276,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: isActive ? onPressed : null,
+                  onPressed: (isActive && !_isConnecting) ? onPressed : null,
                   icon: Icon(icon),
                   label: Text(buttonLabel),
                   style: ElevatedButton.styleFrom(
